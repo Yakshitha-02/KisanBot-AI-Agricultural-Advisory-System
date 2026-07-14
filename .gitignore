@@ -3,24 +3,21 @@
 __pycache__/
 *.pyc
 
-# Environment variables
-.env
-
 # Database
+app.db
 *.db
 
+# Environment
+.env
+
 # Audio
+*.wav
 audio/
 temp/
-output.wav
 
-# Node
-frontend/node_modules/
-frontend/dist/
+# React
+node_modules/
+dist/
 
-# VS Code
-.vscode/
-
-# OS
-.DS_Store
-Thumbs.db
+# Cache
+.pytest_cache/
