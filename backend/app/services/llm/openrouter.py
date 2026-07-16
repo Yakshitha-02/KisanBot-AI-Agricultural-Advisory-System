@@ -1,33 +1,10 @@
-from openai import OpenAI
+from langchain_openai import ChatOpenAI
 
 from app.core.config import settings
 
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
+llm = ChatOpenAI(
+    model="deepseek/deepseek-chat-v3",
     api_key=settings.openrouter_api_key,
+    base_url="https://openrouter.ai/api/v1",
+    temperature=0.2,
 )
-
-
-def ask_llm(prompt: str):
-
-    response = client.chat.completions.create(
-        model="deepseek/deepseek-chat-v3",
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are KisanBot, an AI agricultural assistant. "
-                    "Answer ONLY using the provided context. "
-                    "If the answer is not present in the context, "
-                    "say that the information is unavailable."
-                ),
-            },
-            {
-                "role": "user",
-                "content": prompt,
-            },
-        ],
-        temperature=0.2,
-    )
-
-    return response.choices[0].message.content

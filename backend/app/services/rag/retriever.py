@@ -1,28 +1,12 @@
-from app.services.rag.embeddings import get_embedding
-from app.services.rag.pinecone_store import index
+from app.services.rag.pinecone_store import vector_store
+
+retriever = vector_store.as_retriever(
+    search_kwargs={"k":5}
+)
 
 
-def retrieve_documents(query: str, top_k: int = 5):
+def retrieve_documents(query):
 
-    query_embedding = get_embedding(query)
+    docs = retriever.invoke(query)
 
-    results = index.query(
-        vector=query_embedding,
-        top_k=top_k,
-        include_metadata=True,
-    )
-
-    documents = []
-
-    for match in results["matches"]:
-
-        documents.append(
-            {
-                "score": match["score"],
-                "text": match["metadata"]["text"],
-                "source": match["metadata"]["source"],
-                "page": match["metadata"]["page"],
-            }
-        )
-
-    return documents
+    return docs

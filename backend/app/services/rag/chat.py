@@ -1,42 +1,71 @@
-from app.services.rag.retriever import retrieve_documents
-from app.services.llm.openrouter import ask_llm
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+from app.services.rag.retriever import retriever
+from app.services.llm.openrouter import llm
+
+
+# Prompt Template
+prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """
+You are KisanBot, an AI Agricultural Assistant.
+
+Answer ONLY using the provided context.
+
+Rules:
+- Do not make up facts.
+- If the answer is not found in the context, reply:
+  "I couldn't find this information in the agricultural knowledge base."
+- Use simple language suitable for farmers.
+- Keep the answer under 150 words.
+- Do not mention the words "context" or "documents".
+""",
+        ),
+        (
+            "human",
+            """
+Context:
+{context}
+
+Question:
+{question}
+""",
+        ),
+    ]
+)
 
 
 def ask_rag(question: str):
 
-    results = retrieve_documents(question)
+    # Retrieve relevant documents
+    docs = retriever.invoke(question)
 
+    # No documents found
+    if not docs:
+        return "I couldn't find this information in the agricultural knowledge base."
+
+    # Combine retrieved documents into context
     context = "\n\n".join(
-    doc["text"]
-    for doc in results[:3]
-)
+        doc.page_content
+        for doc in docs
+    )
 
-    prompt = f"""
-Answer in simple language suitable for farmers.
+    # Build LangChain pipeline
+    chain = (
+        prompt
+        | llm
+        | StrOutputParser()
+    )
 
-Maximum 150 words.
-
-Be direct.
-
-Do not repeat information.
-
-Do not mention context or documents.
-
-================ CONTEXT ================
-
-{context}
-
-=========================================
-
-Farmer's Question:
-{question}
-
-Answer:
-"""
-    print("=" * 60)
-    print(context)
-    print("=" * 60)
-
-    answer = ask_llm(prompt)
+    # Generate answer
+    answer = chain.invoke(
+        {
+            "context": context,
+            "question": question,
+        }
+    )
 
     return answer

@@ -42,6 +42,12 @@ class Settings(BaseModel):
     openrouter_api_key: str = Field(
         default_factory=lambda: os.getenv("OPENROUTER_API_KEY", "")
     )
+    openweather_api_key: str= Field(
+        default_factory=lambda: os.getenv("OPENWEATHER_API_KEY", "")
+    )
+    data_gov_api_key: str= Field(
+        default_factory=lambda: os.getenv("DATA_GOV_API_KEY", "")
+    )
 
 
 settings = Settings()

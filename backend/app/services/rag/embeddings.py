@@ -1,12 +1,5 @@
-from sentence_transformers import SentenceTransformer
+from langchain_huggingface import HuggingFaceEmbeddings
 
-model = SentenceTransformer(
-    "sentence-transformers/all-MiniLM-L6-v2"
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
-
-
-def get_embedding(text: str):
-
-    embedding = model.encode(text)
-
-    return embedding.tolist()

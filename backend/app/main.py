@@ -12,6 +12,8 @@ from app.database.session import engine
 from app.api.voice import router as voice_router
 from fastapi.staticfiles import StaticFiles
 import os
+from app.api.weather.routes import router as weather_router
+from app.api.market.routes import router as market_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -45,4 +47,14 @@ app.mount(
     "/audio",
     StaticFiles(directory="audio"),
     name="audio",
+)
+app.include_router(
+    weather_router,
+    prefix="/api/weather",
+    tags=["Weather"],
+)
+app.include_router(
+    market_router,
+    prefix="/api/market",
+    tags=["Market"],
 )
