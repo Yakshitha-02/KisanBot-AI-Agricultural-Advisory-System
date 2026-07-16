@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #2D5A27;
+  --color-brand-primary-hover: #1E3F1A;
+  --color-brand-accent: #4CAF50;
+  --color-brand-accent-dark: #2E7D32;
+  --color-brand-bg: #F1F3EE;
+  --color-brand-canvas: #F9FAF8;
+  --color-chat-user: #DCEDC8;
+}
+
+/* Custom CSS Classes matching the Professional Polish Design Theme */
+.voice-glow {
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.4);
+}
+
+.mic-button {
+  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+}
+
+.chat-bubble-bot {
+  background-color: #ffffff;
+  border-radius: 2px 18px 18px 18px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.chat-bubble-user {
+  background-color: #DCEDC8;
+  border-radius: 18px 2px 18px 18px;
+  color: #1e293b; /* slate-800 */
+}
+
+/* Custom scrollbar to keep layout clean and thin */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Audio Wave Visualizer Styles */
+.audio-wave {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.audio-bar {
+  width: 3px;
+  height: 12px;
+  background: #4CAF50;
+  border-radius: 1px;
+}
+
+/* Custom spin for sun/icons */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+}
+
+/* Custom bounce for rain icons */
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
