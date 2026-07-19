@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, Mic, Volume2, VolumeX, ThumbsUp, ThumbsDown, Info, Bot, User, CornerDownRight } from "lucide-react";
 import { Message, Language } from "../types";
 import { motion, AnimatePresence } from "motion/react";
+import { queryLocalAdvisor, saveLogFeedback } from "../lib/offlineDb";
 
 interface AskAIProps {
   language: Language;
@@ -94,21 +95,12 @@ export default function AskAI({ language, onLanguageChange, messages, onAddMessa
     setInputText("");
     setIsLoading(true);
 
-    try {
-      const response = await fetch("/api/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: text,
-          language,
-          history: messages
-        })
-      });
-
-      const data = await response.json();
-      if (response.ok) {
+    // Simulate thinking delay
+    setTimeout(() => {
+      try {
+        const data = queryLocalAdvisor(text, language);
         const botMsg: Message = {
-          id: data.id || "bot-" + Date.now(),
+          id: data.id,
           sender: "bot",
           text: data.answer,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -119,25 +111,23 @@ export default function AskAI({ language, onLanguageChange, messages, onAddMessa
           sources: data.sources || []
         };
         onAddMessage(botMsg);
+        setIsLoading(false);
         
         // Auto read-aloud response for voice-first experience!
         handleSpeak(data.answer, botMsg.id);
-      } else {
-        throw new Error(data.error || "Failed to query Kisan Mitra backend");
+      } catch (err: any) {
+        console.error(err);
+        const errorMsg: Message = {
+          id: "err-" + Date.now(),
+          sender: "bot",
+          text: `Error processing query: ${err.message}`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          language
+        };
+        onAddMessage(errorMsg);
+        setIsLoading(false);
       }
-    } catch (err: any) {
-      console.error(err);
-      const errorMsg: Message = {
-        id: "err-" + Date.now(),
-        sender: "bot",
-        text: `Error connecting to AI advisor. Please verify internet connection. Output: ${err.message}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        language
-      };
-      onAddMessage(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
+    }, 600);
   };
 
   const handleSpeak = (text: string, msgId: string) => {
@@ -166,18 +156,12 @@ export default function AskAI({ language, onLanguageChange, messages, onAddMessa
 
   const handleFeedback = async (msgId: string, type: "up" | "down") => {
     try {
-      const response = await fetch("/api/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logId: msgId, feedback: type })
-      });
-      if (response.ok) {
-        alert("Thank you for your feedback! This helps agricultural extension workers improve the system.");
-        // Modify local message feedback
-        const msgIndex = messages.findIndex(m => m.id === msgId);
-        if (msgIndex !== -1) {
-          messages[msgIndex].satisfaction = type;
-        }
+      saveLogFeedback(msgId, type);
+      alert("Thank you for your feedback! This helps agricultural extension workers improve the system.");
+      // Modify local message feedback
+      const msgIndex = messages.findIndex(m => m.id === msgId);
+      if (msgIndex !== -1) {
+        messages[msgIndex].satisfaction = type;
       }
     } catch (err) {
       console.error("Feedback submission failed", err);

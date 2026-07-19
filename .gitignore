@@ -1,23 +1,8 @@
-# Python
-.venv/
-__pycache__/
-*.pyc
-
-# Database
-app.db
-*.db
-
-# Environment
-.env
-
-# Audio
-*.wav
-audio/
-temp/
-
-# React
 node_modules/
+build/
 dist/
-
-# Cache
-.pytest_cache/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Mic, Volume2, Square, RefreshCw, HelpCircle, AlertCircle, Bot, User } from "lucide-react";
 import { Language } from "../types";
 import { motion, AnimatePresence } from "motion/react";
+import { queryLocalAdvisor } from "../lib/offlineDb";
 
 interface VoiceAssistantProps {
   language: Language;
@@ -90,25 +91,12 @@ export default function VoiceAssistant({ language, onLanguageChange }: VoiceAssi
   const processVoiceQuery = async (queryText: string) => {
     setStatus("processing");
     try {
-      const response = await fetch("/api/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: queryText,
-          language
-        })
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        setAiResponse(data.answer);
-        setQualityScore(data.confidenceScore);
-        speakResponse(data.answer);
-      } else {
-        throw new Error(data.error);
-      }
+      const data = queryLocalAdvisor(queryText, language);
+      setAiResponse(data.answer);
+      setQualityScore(data.confidenceScore);
+      speakResponse(data.answer);
     } catch (err: any) {
-      setAiResponse(`Failed to fetch advisory: ${err.message}`);
+      setAiResponse(`Failed to process voice query: ${err.message}`);
       setStatus("idle");
     }
   };

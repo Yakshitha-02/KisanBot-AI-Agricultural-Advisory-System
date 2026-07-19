@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { LineChart, Users, AlertTriangle, BookOpen, Check, ThumbsUp, ThumbsDown, Database, Plus, RefreshCw, Star } from "lucide-react";
+import { getTelemetryLogs, toggleLogFlag, addCustomKBItem, getAdminMetrics } from "../lib/offlineDb";
 
 export default function AdminPanel() {
   const [metrics, setMetrics] = useState({
@@ -22,19 +23,13 @@ export default function AdminPanel() {
   const [kbTags, setKbTags] = useState("");
   const [submittingKb, setSubmittingKb] = useState(false);
 
-  const fetchAdminData = async () => {
+  const fetchAdminData = () => {
     setIsLoading(true);
     try {
-      const [mRes, lRes] = await Promise.all([
-        fetch("/api/admin/metrics"),
-        fetch("/api/admin/logs")
-      ]);
-      if (mRes.ok && lRes.ok) {
-        const mData = await mRes.json();
-        const lData = await lRes.json();
-        setMetrics(mData);
-        setLogs(lData);
-      }
+      const mData = getAdminMetrics();
+      const lData = getTelemetryLogs();
+      setMetrics(mData);
+      setLogs(lData);
     } catch (err) {
       console.error("Error fetching admin data", err);
     } finally {
@@ -46,22 +41,16 @@ export default function AdminPanel() {
     fetchAdminData();
   }, []);
 
-  const handleToggleFlag = async (logId: string) => {
+  const handleToggleFlag = (logId: string) => {
     try {
-      const res = await fetch("/api/admin/logs/flag", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logId })
-      });
-      if (res.ok) {
-        fetchAdminData();
-      }
+      toggleLogFlag(logId);
+      fetchAdminData();
     } catch (err) {
       console.error("Error toggling flag", err);
     }
   };
 
-  const handleAddKb = async (e: React.FormEvent) => {
+  const handleAddKb = (e: React.FormEvent) => {
     e.preventDefault();
     if (!kbQuestion.trim() || !kbAnswer.trim()) {
       alert("Please fill in both Question and Answer fields.");
@@ -70,27 +59,19 @@ export default function AdminPanel() {
 
     setSubmittingKb(true);
     try {
-      const res = await fetch("/api/admin/kb/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          category: kbCategory,
-          question: kbQuestion,
-          answer: kbAnswer,
-          language: kbLang,
-          tags: kbTags.split(",").map(t => t.trim()).filter(Boolean)
-        })
+      addCustomKBItem({
+        category: kbCategory as any,
+        question: kbQuestion,
+        answer: kbAnswer,
+        language: kbLang as any,
+        tags: kbTags.split(",").map(t => t.trim()).filter(Boolean)
       });
 
-      if (res.ok) {
-        alert("Success! The factual entry has been injected into Kisan Mitra's vector RAG pipeline dynamically. Farmers can now get answers grounded in this fact instantly!");
-        setKbQuestion("");
-        setKbAnswer("");
-        setKbTags("");
-        fetchAdminData();
-      } else {
-        throw new Error("Failed to enrich KB");
-      }
+      alert("Success! The factual entry has been injected into Kisan Mitra's offline RAG pipeline dynamically. Farmers can now get answers grounded in this fact instantly!");
+      setKbQuestion("");
+      setKbAnswer("");
+      setKbTags("");
+      fetchAdminData();
     } catch (err: any) {
       alert(`Error: ${err.message}`);
     } finally {
