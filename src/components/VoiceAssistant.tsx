@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Mic, Volume2, Square, RefreshCw, HelpCircle, AlertCircle, Bot, User } from "lucide-react";
 import { Language } from "../types";
 import { motion, AnimatePresence } from "motion/react";
-import { queryLocalAdvisor } from "../lib/offlineDb";
+import { queryLiveFastAPI } from "../lib/offlineDb";
 
 interface VoiceAssistantProps {
   language: Language;
@@ -91,7 +91,7 @@ export default function VoiceAssistant({ language, onLanguageChange }: VoiceAssi
   const processVoiceQuery = async (queryText: string) => {
     setStatus("processing");
     try {
-      const data = queryLocalAdvisor(queryText, language);
+      const data = await queryLiveFastAPI(queryText, language);
       setAiResponse(data.answer);
       setQualityScore(data.confidenceScore);
       speakResponse(data.answer);

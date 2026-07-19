@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, Mic, Volume2, VolumeX, ThumbsUp, ThumbsDown, Info, Bot, User, CornerDownRight } from "lucide-react";
 import { Message, Language } from "../types";
 import { motion, AnimatePresence } from "motion/react";
-import { queryLocalAdvisor, saveLogFeedback } from "../lib/offlineDb";
+import { queryLiveFastAPI, saveLogFeedback } from "../lib/offlineDb";
 
 interface AskAIProps {
   language: Language;
@@ -95,39 +95,36 @@ export default function AskAI({ language, onLanguageChange, messages, onAddMessa
     setInputText("");
     setIsLoading(true);
 
-    // Simulate thinking delay
-    setTimeout(() => {
-      try {
-        const data = queryLocalAdvisor(text, language);
-        const botMsg: Message = {
-          id: data.id,
-          sender: "bot",
-          text: data.answer,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          language,
-          intent: data.intent,
-          confidenceScore: data.confidenceScore,
-          flagged: data.flagged,
-          sources: data.sources || []
-        };
-        onAddMessage(botMsg);
-        setIsLoading(false);
-        
-        // Auto read-aloud response for voice-first experience!
-        handleSpeak(data.answer, botMsg.id);
-      } catch (err: any) {
-        console.error(err);
-        const errorMsg: Message = {
-          id: "err-" + Date.now(),
-          sender: "bot",
-          text: `Error processing query: ${err.message}`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          language
-        };
-        onAddMessage(errorMsg);
-        setIsLoading(false);
-      }
-    }, 600);
+    try {
+      const data = await queryLiveFastAPI(text, language, messages);
+      const botMsg: Message = {
+        id: data.id,
+        sender: "bot",
+        text: data.answer,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        language,
+        intent: data.intent,
+        confidenceScore: data.confidenceScore,
+        flagged: data.flagged,
+        sources: data.sources || []
+      };
+      onAddMessage(botMsg);
+      setIsLoading(false);
+      
+      // Auto read-aloud response for voice-first experience!
+      handleSpeak(data.answer, botMsg.id);
+    } catch (err: any) {
+      console.error(err);
+      const errorMsg: Message = {
+        id: "err-" + Date.now(),
+        sender: "bot",
+        text: `Error processing query: ${err.message}`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        language
+      };
+      onAddMessage(errorMsg);
+      setIsLoading(false);
+    }
   };
 
   const handleSpeak = (text: string, msgId: string) => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { LineChart, Users, AlertTriangle, BookOpen, Check, ThumbsUp, ThumbsDown, Database, Plus, RefreshCw, Star } from "lucide-react";
-import { getTelemetryLogs, toggleLogFlag, addCustomKBItem, getAdminMetrics } from "../lib/offlineDb";
+import { getLiveTelemetryLogs, toggleLogFlag, addCustomKBItem, getLiveAdminMetrics } from "../lib/offlineDb";
 
 export default function AdminPanel() {
   const [metrics, setMetrics] = useState({
@@ -23,11 +23,11 @@ export default function AdminPanel() {
   const [kbTags, setKbTags] = useState("");
   const [submittingKb, setSubmittingKb] = useState(false);
 
-  const fetchAdminData = () => {
+  const fetchAdminData = async () => {
     setIsLoading(true);
     try {
-      const mData = getAdminMetrics();
-      const lData = getTelemetryLogs();
+      const mData = await getLiveAdminMetrics();
+      const lData = await getLiveTelemetryLogs();
       setMetrics(mData);
       setLogs(lData);
     } catch (err) {
@@ -41,16 +41,16 @@ export default function AdminPanel() {
     fetchAdminData();
   }, []);
 
-  const handleToggleFlag = (logId: string) => {
+  const handleToggleFlag = async (logId: string) => {
     try {
-      toggleLogFlag(logId);
-      fetchAdminData();
+      await toggleLogFlag(logId);
+      await fetchAdminData();
     } catch (err) {
       console.error("Error toggling flag", err);
     }
   };
 
-  const handleAddKb = (e: React.FormEvent) => {
+  const handleAddKb = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!kbQuestion.trim() || !kbAnswer.trim()) {
       alert("Please fill in both Question and Answer fields.");
@@ -59,7 +59,7 @@ export default function AdminPanel() {
 
     setSubmittingKb(true);
     try {
-      addCustomKBItem({
+      await addCustomKBItem({
         category: kbCategory as any,
         question: kbQuestion,
         answer: kbAnswer,
@@ -67,11 +67,11 @@ export default function AdminPanel() {
         tags: kbTags.split(",").map(t => t.trim()).filter(Boolean)
       });
 
-      alert("Success! The factual entry has been injected into Kisan Mitra's offline RAG pipeline dynamically. Farmers can now get answers grounded in this fact instantly!");
+      alert("Success! The factual entry has been injected into Kisan Mitra's RAG pipeline dynamically. Farmers can now get answers grounded in this fact instantly!");
       setKbQuestion("");
       setKbAnswer("");
       setKbTags("");
-      fetchAdminData();
+      await fetchAdminData();
     } catch (err: any) {
       alert(`Error: ${err.message}`);
     } finally {
