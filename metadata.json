@@ -1,0 +1,6 @@
+{
+  "name": "Kisan Mitra",
+  "description": "Multilingual AI Chatbot for Indian Farmers answering queries related to crop management, weather, pest control, subsidies, and market prices in Hindi, Kannada, and English.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
