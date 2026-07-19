@@ -1,71 +1,77 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-from app.services.rag.retriever import retriever
+from app.services.rag.retriever import retrieve_documents
 from app.services.llm.openrouter import llm
 
 
-# Prompt Template
-prompt = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            """
-You are KisanBot, an AI Agricultural Assistant.
+prompt = ChatPromptTemplate.from_template("""
+Answer in simple language suitable for farmers.
 
-Answer ONLY using the provided context.
+Maximum 150 words.
 
-Rules:
-- Do not make up facts.
-- If the answer is not found in the context, reply:
-  "I couldn't find this information in the agricultural knowledge base."
-- Use simple language suitable for farmers.
-- Keep the answer under 150 words.
-- Do not mention the words "context" or "documents".
-""",
-        ),
-        (
-            "human",
-            """
+Use ONLY the given context.
+
+If the answer is not available,
+say you don't know.
+
 Context:
 {context}
 
 Question:
 {question}
-""",
-        ),
-    ]
-)
+""")
+
+
+def get_confidence(score):
+    # Adjust thresholds after testing
+    if score < 0.30:
+        return "High"
+    elif score < 0.60:
+        return "Medium"
+    else:
+        return "Low"
 
 
 def ask_rag(question: str):
 
-    # Retrieve relevant documents
-    docs = retriever.invoke(question)
+    results = retrieve_documents(question)
 
-    # No documents found
-    if not docs:
-        return "I couldn't find this information in the agricultural knowledge base."
+    docs = [doc for doc, score in results]
 
-    # Combine retrieved documents into context
+    scores = [score for doc, score in results]
+
     context = "\n\n".join(
         doc.page_content
         for doc in docs
     )
 
-    # Build LangChain pipeline
     chain = (
         prompt
         | llm
         | StrOutputParser()
     )
 
-    # Generate answer
     answer = chain.invoke(
-        {
-            "context": context,
-            "question": question,
-        }
+    {
+        "context": context,
+        "question": question,
+    }
     )
 
-    return answer
+    confidence = get_confidence(scores[0])
+
+# Downgrade confidence if the model says the answer isn't in the context
+    if (
+     "don't know" in answer.lower()
+     or "do not know" in answer.lower()
+     or "not mention" in answer.lower()
+     or "not available" in answer.lower()
+    ):
+     confidence = "Low"
+
+    return {
+     "answer": answer,
+     "confidence": confidence,
+     "score": round(scores[0], 3),
+}

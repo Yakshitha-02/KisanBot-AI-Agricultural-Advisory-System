@@ -82,8 +82,10 @@ def ask(
     response = process_question(request.question)
 
     language = response["language"]
-
     final_answer = response["answer"]
+
+    confidence = response.get("confidence")
+    score = response.get("score")
 
     # Save user message
     user_message = Message(
@@ -115,6 +117,8 @@ def ask(
         "session_id": session.id,
         "language": language,
         "answer": final_answer,
+        "confidence": confidence,
+        "score": score,
     }
 
 @router.post("/intent")

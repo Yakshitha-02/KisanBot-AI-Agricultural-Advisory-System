@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 from app.api.weather.routes import router as weather_router
 from app.api.market.routes import router as market_router
+from app.api.schemes.router import router as schemes_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -58,3 +59,4 @@ app.include_router(
     prefix="/api/market",
     tags=["Market"],
 )
+app.include_router(schemes_router)
