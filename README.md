@@ -1,1 +1,0 @@
-# AI-Based-Agricultural-Advisory-System-for-Multilingual-Farmer-Query-Assistance_Jun_2026

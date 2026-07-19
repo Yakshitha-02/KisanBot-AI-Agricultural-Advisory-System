@@ -3,21 +3,18 @@
 __pycache__/
 *.pyc
 
-# Database
-app.db
-*.db
-
 # Environment
 .env
+backend/.env
 
-# Audio
-*.wav
-audio/
-temp/
+# Database
+*.db
 
-# React
+# Audio / Temp
+backend/audio/
+backend/temp/
+backend/output.wav
+
+# Node
 node_modules/
 dist/
-
-# Cache
-.pytest_cache/
