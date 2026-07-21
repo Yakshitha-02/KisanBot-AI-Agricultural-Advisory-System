@@ -50,7 +50,17 @@ def process_question(question: str):
         city = extract_city(english_question)
 
         if city:
-            answer = get_current_weather(city)
+         weather = get_current_weather(city)
+
+         answer = f"""
+🌦 Weather Report
+
+City: {weather['city']}
+Temperature: {weather['temperature']}°C
+Humidity: {weather['humidity']}%
+Condition: {weather['description']}
+Wind Speed: {weather['wind_speed']} m/s
+"""
         else:
             answer = "Please mention the city name."
 

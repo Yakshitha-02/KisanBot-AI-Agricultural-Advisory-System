@@ -1,98 +1,494 @@
-import { motion } from 'framer-motion';
-import { FiArrowRight } from 'react-icons/fi';
+import { motion } from "framer-motion";
+import {
+  FiArrowRight,
+  FiPlayCircle,
+  FiCheckCircle,
+} from "react-icons/fi";
+import {
+  CloudSun,
+  TrendingUp,
+  Bot,
+  Languages,
+} from "lucide-react";
 
 function Hero() {
   return (
-    <section id='home' className='overflow-hidden rounded-[2rem] bg-white px-5 py-10 shadow-[0_40px_100px_-30px_rgba(46,125,50,0.18)] sm:px-8 sm:py-14'>
-      <div className='mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]'>
+    <section
+      id="home"
+      className="relative overflow-hidden py-24"
+    >
+      {/* Background */}
+
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+
+        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-emerald-300/30 blur-3xl" />
+
+        <div className="absolute right-0 top-0 h-[500px] w-[500px] rounded-full bg-lime-200/30 blur-3xl" />
+
+        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-green-100/40 blur-3xl" />
+
+      </div>
+
+      <div className="mx-auto grid max-w-7xl items-center gap-20 px-6 lg:grid-cols-2">
+
+        {/* LEFT SIDE */}
+
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          className='space-y-8'
+          transition={{ duration: .8 }}
         >
-          <div className='inline-flex items-center gap-2 rounded-full bg-[#E8F5E9] px-4 py-2 text-sm font-semibold text-[#2E7D32]'>
-            AI Farming Companion
-          </div>
-          <div className='space-y-5'>
-            <h1 className='max-w-3xl text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl'>
-              KisanBot - Your AI Farming Companion
-            </h1>
-            <p className='max-w-2xl text-lg leading-8 text-slate-600'>
-              Ask farming questions in your own language and receive accurate AI-powered guidance instantly.
-            </p>
+
+          {/* Badge */}
+
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-5 py-2 shadow-sm">
+
+            <Bot
+              size={18}
+              className="text-emerald-600"
+            />
+
+            <span className="text-sm font-semibold text-emerald-700">
+              AI Powered Agricultural Assistant
+            </span>
+
           </div>
 
-          <div className='flex flex-col gap-4 sm:flex-row'>
-            <a
-              href='#features'
-              className='inline-flex items-center justify-center rounded-full bg-[#2E7D32] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-[#2E7D32]/20 transition hover:bg-[#25692b]'
-            >
-              Start Chat
-              <FiArrowRight className='ml-3 h-4 w-4' />
-            </a>
-            <a
-              href='#about'
-              className='inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-[#2E7D32] hover:text-[#2E7D32]'
-            >
-              Learn More
-            </a>
+          {/* Heading */}
+
+          <h1 className="mt-8 text-5xl font-extrabold leading-tight text-slate-900 lg:text-6xl">
+
+            Smarter Farming
+
+            <span className="block bg-gradient-to-r from-emerald-600 via-green-600 to-lime-500 bg-clip-text text-transparent">
+
+              Starts With AI
+
+            </span>
+
+          </h1>
+
+          {/* Description */}
+
+          <p className="mt-8 max-w-xl text-lg leading-8 text-slate-600">
+
+            KisanBot helps farmers make better decisions using
+            Artificial Intelligence, multilingual support,
+            weather forecasting, market price prediction,
+            crop disease assistance and government schemes —
+            all in one intelligent platform.
+
+          </p>
+
+          {/* CTA */}
+
+          <div className="mt-10 flex flex-wrap gap-5">
+
+            <button className="flex items-center gap-3 rounded-2xl bg-emerald-600 px-8 py-4 font-semibold text-white shadow-xl transition hover:scale-105 hover:bg-emerald-700">
+
+              Try KisanBot
+
+              <FiArrowRight />
+
+            </button>
+
+            <button className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-white px-8 py-4 font-semibold text-slate-700 transition hover:border-emerald-500 hover:text-emerald-600">
+
+              <FiPlayCircle />
+
+              Watch Demo
+
+            </button>
+
           </div>
 
-          <div className='grid gap-4 sm:grid-cols-2'>
-            <div className='rounded-3xl bg-[#F7FAF7] p-5 shadow-sm'>
-              <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>Trusted by farmers</p>
-              <p className='mt-3 text-2xl font-semibold text-slate-900'>120K+</p>
-            </div>
-            <div className='rounded-3xl bg-[#F7FAF7] p-5 shadow-sm'>
-              <p className='text-xs uppercase tracking-[0.2em] text-slate-400'>Daily recommendations</p>
-              <p className='mt-3 text-2xl font-semibold text-slate-900'>35K+</p>
-            </div>
+          {/* Technology Pills */}
+
+          <div className="mt-10 flex flex-wrap gap-3">
+
+            {[
+              "React",
+              "FastAPI",
+              "LangChain",
+              "Pinecone",
+              "Sarvam AI",
+              "SQLite",
+            ].map((tech) => (
+
+              <span
+                key={tech}
+                className="rounded-full bg-white px-4 py-2 text-sm font-medium shadow"
+              >
+                {tech}
+              </span>
+
+            ))}
+
           </div>
+
+          {/* Statistics */}
+
+          <div className="mt-14 grid grid-cols-2 gap-5 md:grid-cols-4">
+
+            {[
+              {
+                value: "120K+",
+                label: "Farmers",
+              },
+              {
+                value: "98%",
+                label: "Accuracy",
+              },
+              {
+                value: "6+",
+                label: "Languages",
+              },
+              {
+                value: "24/7",
+                label: "Available",
+              },
+            ].map((item) => (
+
+              <div
+                key={item.label}
+                className="rounded-3xl bg-white p-6 text-center shadow-lg"
+              >
+
+                <h2 className="text-3xl font-bold text-emerald-700">
+
+                  {item.value}
+
+                </h2>
+
+                <p className="mt-2 text-sm text-slate-500">
+
+                  {item.label}
+
+                </p>
+
+              </div>
+
+            ))}
+
+          </div>
+
+          {/* Feature List */}
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-2">
+
+            {[
+              "Weather Forecast",
+              "Market Prices",
+              "Disease Detection",
+              "Voice Assistant",
+              "Government Schemes",
+              "Multilingual AI",
+            ].map((item) => (
+
+              <div
+                key={item}
+                className="flex items-center gap-3"
+              >
+
+                <FiCheckCircle className="text-emerald-600" />
+
+                <span className="text-slate-700">
+
+                  {item}
+
+                </span>
+
+              </div>
+
+            ))}
+
+          </div>
+
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          className='relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#E8F5E9] via-white to-[#F7FAF7] p-5 shadow-xl'
-        >
-          <div className='pointer-events-none absolute -right-10 top-10 h-36 w-36 rounded-full bg-[#F9A826]/15 blur-2xl' />
-          <div className='pointer-events-none absolute left-6 top-6 h-24 w-24 rounded-full bg-[#4CAF50]/10 blur-2xl' />
-          <div className='relative rounded-[1.75rem] border border-white/70 bg-white/90 p-7 shadow-2xl sm:p-10'>
-            <div className='mb-6 rounded-3xl bg-[#E8F5E9] p-6 text-center text-sm text-[#2E7D32] shadow-inner shadow-[#2E7D32]/5'>
-              Agriculture + AI insights in a single dashboard.
-            </div>
-            <div className='space-y-5'>
-              <div className='rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm'>
-                <div className='mb-4 flex items-center justify-between'>
-                  <span className='rounded-full bg-[#4CAF50]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#2E7D32]'>Live</span>
-                  <span className='text-xs text-slate-400'>Updated now</span>
-                </div>
-                <div className='space-y-3'>
-                  <div className='rounded-3xl bg-[#F7FAF7] p-4'>
-                    <p className='text-sm font-semibold text-slate-900'>Soil health suggestion</p>
-                    <p className='mt-2 text-sm text-slate-500'>Nitrogen level and irrigation cadence optimized for maize.</p>
-                  </div>
-                  <div className='rounded-3xl bg-[#F7FAF7] p-4'>
-                    <p className='text-sm font-semibold text-slate-900'>Voice assistant ready</p>
-                    <p className='mt-2 text-sm text-slate-500'>Ask questions naturally in your language.</p>
-                  </div>
-                </div>
-              </div>
-              <div className='grid gap-4 sm:grid-cols-2'>
-                <div className='rounded-3xl bg-[#F7FAF7] p-4 text-center'>
-                  <p className='text-2xl font-semibold text-slate-900'>98%</p>
-                  <p className='mt-2 text-sm text-slate-500'>Precision advisory accuracy</p>
-                </div>
-                <div className='rounded-3xl bg-[#F7FAF7] p-4 text-center'>
-                  <p className='text-2xl font-semibold text-slate-900'>4.8/5</p>
-                  <p className='mt-2 text-sm text-slate-500'>Farmer satisfaction score</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+        {/* RIGHT SIDE STARTS HERE */}
+        {/* RIGHT SIDE */}
+
+<motion.div
+  initial={{ opacity: 0, x: 60 }}
+  animate={{ opacity: 1, x: 0 }}
+  transition={{ duration: 0.9 }}
+  className="relative flex justify-center"
+>
+
+  {/* Floating Weather Card */}
+
+  <motion.div
+    animate={{ y: [0, -10, 0] }}
+    transition={{
+      repeat: Infinity,
+      duration: 4,
+    }}
+    className="absolute -left-8 top-10 z-20 rounded-3xl bg-white p-5 shadow-2xl"
+  >
+
+    <div className="flex items-center gap-3">
+
+      <CloudSun
+        className="text-yellow-500"
+        size={28}
+      />
+
+      <div>
+
+        <p className="text-sm text-slate-500">
+
+          Weather
+
+        </p>
+
+        <h3 className="font-bold">
+
+          29°C
+
+        </h3>
+
+      </div>
+
+    </div>
+
+    <p className="mt-2 text-xs text-slate-500">
+
+      Humidity 82%
+
+    </p>
+
+  </motion.div>
+
+  {/* Floating Market Card */}
+
+  <motion.div
+    animate={{ y: [0, 8, 0] }}
+    transition={{
+      repeat: Infinity,
+      duration: 5,
+    }}
+    className="absolute -right-10 top-20 z-20 rounded-3xl bg-white p-5 shadow-2xl"
+  >
+
+    <div className="flex items-center gap-3">
+
+      <TrendingUp
+        className="text-green-600"
+        size={24}
+      />
+
+      <div>
+
+        <p className="text-sm text-slate-500">
+
+          Market
+
+        </p>
+
+        <h3 className="font-bold">
+
+          ₹32/kg
+
+        </h3>
+
+      </div>
+
+    </div>
+
+    <p className="mt-2 text-xs text-green-600">
+
+      Tomato ↑ 5%
+
+    </p>
+
+  </motion.div>
+
+  {/* Floating Language Card */}
+
+  <motion.div
+    animate={{ y: [0, -8, 0] }}
+    transition={{
+      repeat: Infinity,
+      duration: 4.5,
+    }}
+    className="absolute bottom-8 -left-10 z-20 rounded-3xl bg-white p-5 shadow-2xl"
+  >
+
+    <div className="flex items-center gap-3">
+
+      <Languages
+        className="text-emerald-600"
+        size={24}
+      />
+
+      <div>
+
+        <h3 className="font-bold">
+
+          6 Languages
+
+        </h3>
+
+        <p className="text-xs text-slate-500">
+
+          Voice Supported
+
+        </p>
+
+      </div>
+
+    </div>
+
+  </motion.div>
+
+  {/* Main Dashboard */}
+
+  <div className="relative w-full max-w-xl rounded-[36px] border border-white/40 bg-white/80 p-7 shadow-[0_30px_80px_rgba(0,0,0,0.12)] backdrop-blur-xl">
+
+    {/* Header */}
+
+    <div className="flex items-center justify-between">
+
+      <div>
+
+        <h3 className="text-xl font-bold text-slate-900">
+
+          🤖 AI Dashboard
+
+        </h3>
+
+        <p className="text-sm text-slate-500">
+
+          Real-time Farming Assistant
+
+        </p>
+
+      </div>
+
+      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+
+        ● Online
+
+      </span>
+
+    </div>
+
+    {/* Chat Window */}
+
+    <div className="mt-8 space-y-5 rounded-3xl bg-slate-50 p-6">
+
+      {/* Farmer */}
+
+      <div className="flex justify-end">
+
+        <div className="max-w-xs rounded-2xl rounded-br-md bg-emerald-600 px-5 py-3 text-white shadow">
+
+          My tomato leaves have yellow spots. What should I do?
+
+        </div>
+
+      </div>
+
+      {/* AI */}
+
+      <div className="flex gap-3">
+
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+
+          🤖
+
+        </div>
+
+        <div className="max-w-sm rounded-2xl rounded-bl-md bg-white px-5 py-4 shadow">
+
+          <p className="font-semibold text-slate-800">
+
+            Possible Early Blight Detected
+
+          </p>
+
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+
+            • Improve air circulation around plants.
+
+            <br />
+
+            • Avoid watering the leaves.
+
+            <br />
+
+            • Apply a recommended fungicide.
+
+            <br />
+
+            • Monitor new leaf growth over the next 5 days.
+
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    {/* Bottom Cards */}
+
+    <div className="mt-8 grid grid-cols-3 gap-4">
+
+      <div className="rounded-2xl bg-emerald-50 p-4 text-center">
+
+        <h4 className="text-xl font-bold text-emerald-700">
+
+          98%
+
+        </h4>
+
+        <p className="text-xs text-slate-500">
+
+          Accuracy
+
+        </p>
+
+      </div>
+
+      <div className="rounded-2xl bg-blue-50 p-4 text-center">
+
+        <h4 className="text-xl font-bold text-blue-700">
+
+          24/7
+
+        </h4>
+
+        <p className="text-xs text-slate-500">
+
+          Support
+
+        </p>
+
+      </div>
+
+      <div className="rounded-2xl bg-orange-50 p-4 text-center">
+
+        <h4 className="text-xl font-bold text-orange-600">
+
+          AI
+
+        </h4>
+
+        <p className="text-xs text-slate-500">
+
+          Powered
+
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</motion.div>
       </div>
     </section>
   );

@@ -1,98 +1,157 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiMenu, FiX } from 'react-icons/fi';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { FiMenu, FiX } from "react-icons/fi";
+import { Leaf } from "lucide-react";
 
 const navItems = [
-  { label: 'Home', href: '#home' },
-  { label: 'Features', href: '#features' },
-  { label: 'Languages', href: '#languages' },
-  { label: 'About', href: '#about' },
+  { label: "Home", href: "#home" },
+  { label: "Features", href: "#features" },
+  { label: "Languages", href: "#languages" },
+  { label: "About", href: "#about" },
 ];
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className='sticky top-0 z-50 border-b border-white/80 bg-[#F7FAF7]/95 backdrop-blur-xl'>
-      <div className='mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6'>
-        <Link to='/' className='text-lg font-semibold tracking-tight text-[#2E7D32]'>
-          KisanBot
+    <header className="sticky top-0 z-50 border-b border-white/20 bg-white/70 backdrop-blur-2xl">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
+
+        {/* Logo */}
+
+        <Link
+          to="/"
+          className="flex items-center gap-3"
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-700 text-white shadow-lg">
+
+            <Leaf size={24} />
+
+          </div>
+
+          <div>
+
+            <h1 className="text-xl font-bold text-slate-900">
+              KisanBot
+            </h1>
+
+            <p className="text-xs text-slate-500">
+              AI Farming Assistant
+            </p>
+
+          </div>
+
         </Link>
 
-        <nav className='hidden items-center gap-8 md:flex'>
+        {/* Desktop Nav */}
+
+        <nav className="hidden items-center gap-3 rounded-full bg-white p-2 shadow-lg md:flex">
+
           {navItems.map((item) => (
-            <a key={item.label} href={item.href} className='text-sm font-medium text-slate-700 transition hover:text-[#2E7D32]'>
+
+            <a
+              key={item.label}
+              href={item.href}
+              className="rounded-full px-5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-600"
+            >
               {item.label}
             </a>
+
           ))}
+
         </nav>
 
-        <div className='hidden items-center gap-3 md:flex'>
+        {/* Desktop Buttons */}
+
+        <div className="hidden items-center gap-4 md:flex">
+
           <Link
-            to='/login'
-            className='rounded-full border border-[#2E7D32] px-5 py-2 text-sm font-semibold text-[#2E7D32] transition hover:bg-[#2E7D32]/10'
+            to="/login"
+            className="rounded-full border border-emerald-500 px-6 py-3 font-semibold text-emerald-600 transition hover:bg-emerald-50"
           >
             Login
           </Link>
-          <Link
-            to='/register'
-            className='rounded-full bg-[#2E7D32] px-5 py-2 text-sm font-semibold text-white shadow-sm shadow-[#2E7D32]/20 transition hover:bg-[#25692b]'
-          >
-            Register
-          </Link>
+
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <Link
+              to="/register"
+              className="rounded-full bg-gradient-to-r from-emerald-600 to-green-700 px-7 py-3 font-semibold text-white shadow-xl"
+            >
+              Get Started
+            </Link>
+          </motion.div>
+
         </div>
 
+        {/* Mobile Button */}
+
         <button
-          type='button'
-          className='inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm md:hidden'
-          onClick={() => setMenuOpen((state) => !state)}
-          aria-label='Toggle menu'
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="rounded-2xl bg-white p-3 shadow-lg md:hidden"
         >
-          {menuOpen ? <FiX className='h-5 w-5' /> : <FiMenu className='h-5 w-5' />}
+          {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
         </button>
+
       </div>
 
+      {/* Mobile Menu */}
+
       <AnimatePresence>
+
         {menuOpen && (
+
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className='overflow-hidden border-t border-white/80 bg-[#F7FAF7] md:hidden'
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: .25 }}
+            className="border-t bg-white shadow-xl md:hidden"
           >
-            <div className='space-y-4 px-4 py-5'>
+
+            <div className="space-y-3 p-6">
+
               {navItems.map((item) => (
+
                 <a
                   key={item.label}
                   href={item.href}
-                  className='block rounded-3xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-[#E8F5E9] hover:text-[#2E7D32]'
                   onClick={() => setMenuOpen(false)}
+                  className="block rounded-2xl px-5 py-4 text-lg font-medium transition hover:bg-emerald-50 hover:text-emerald-600"
                 >
                   {item.label}
                 </a>
+
               ))}
-              <div className='space-y-3 rounded-3xl border border-[#E8F5E9] bg-white p-4 shadow-sm'>
+
+              <div className="space-y-3 pt-3">
+
                 <Link
-                  to='/login'
-                  className='block rounded-full border border-[#2E7D32] px-4 py-3 text-center text-sm font-semibold text-[#2E7D32]'
+                  to="/login"
                   onClick={() => setMenuOpen(false)}
+                  className="block rounded-2xl border border-emerald-500 py-3 text-center font-semibold text-emerald-600"
                 >
                   Login
                 </Link>
+
                 <Link
-                  to='/register'
-                  className='block rounded-full bg-[#2E7D32] px-4 py-3 text-center text-sm font-semibold text-white'
+                  to="/register"
                   onClick={() => setMenuOpen(false)}
+                  className="block rounded-2xl bg-gradient-to-r from-emerald-600 to-green-700 py-3 text-center font-semibold text-white"
                 >
-                  Register
+                  Get Started
                 </Link>
+
               </div>
+
             </div>
+
           </motion.div>
+
         )}
+
       </AnimatePresence>
+
     </header>
   );
 }
