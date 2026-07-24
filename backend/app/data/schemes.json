@@ -1,0 +1,87 @@
+[
+    {
+        "id": "pm_kisan",
+        "name": "PM-KISAN",
+        "description": "Provides income support of ₹6,000 per year to eligible landholding farmer families.",
+        "benefit": "₹6,000 per year in three equal installments.",
+        "eligibility": {
+            "land_owner": true,
+            "farmer_types": [
+                "small",
+                "marginal",
+                "other"
+            ]
+        },
+        "official_url": "https://pmkisan.gov.in"
+    },
+    {
+        "id": "pmfby",
+        "name": "Pradhan Mantri Fasal Bima Yojana",
+        "description": "Crop insurance scheme providing financial support against crop loss.",
+        "benefit": "Insurance coverage for notified crops.",
+        "eligibility": {
+            "farmer_types": [
+                "small",
+                "marginal",
+                "other",
+                "tenant"
+            ]
+        },
+        "official_url": "https://pmfby.gov.in"
+    },
+    {
+        "id": "kcc",
+        "name": "Kisan Credit Card",
+        "description": "Provides affordable agricultural credit to farmers.",
+        "benefit": "Short-term loans with subsidized interest.",
+        "eligibility": {
+            "farmer_types": [
+                "small",
+                "marginal",
+                "other",
+                "tenant"
+            ]
+        },
+        "official_url": "https://fasalrin.gov.in"
+    },
+    {
+        "id": "soil_health_card",
+        "name": "Soil Health Card Scheme",
+        "description": "Provides farmers with soil health reports and fertilizer recommendations.",
+        "benefit": "Free soil testing and recommendations.",
+        "eligibility": {
+            "farmer_types": [
+                "small",
+                "marginal",
+                "other",
+                "tenant"
+            ]
+        },
+        "official_url": "https://soilhealth.dac.gov.in"
+    },
+    {
+        "id": "pmksy",
+        "name": "Pradhan Mantri Krishi Sinchayee Yojana",
+        "description": "Supports irrigation infrastructure and efficient water management.",
+        "benefit": "Financial assistance for irrigation projects.",
+        "eligibility": {
+            "land_owner": true
+        },
+        "official_url": "https://pmksy.gov.in"
+    },
+    {
+        "id": "enam",
+        "name": "e-NAM",
+        "description": "National Agriculture Market for transparent online agricultural trading.",
+        "benefit": "Better market access and price discovery.",
+        "eligibility": {
+            "farmer_types": [
+                "small",
+                "marginal",
+                "other",
+                "tenant"
+            ]
+        },
+        "official_url": "https://enam.gov.in"
+    }
+]
