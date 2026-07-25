@@ -15,6 +15,7 @@ import os
 from app.api.weather.routes import router as weather_router
 from app.api.market.routes import router as market_router
 from app.api.schemes.router import router as schemes_router
+from app.api.disease.disease_detection import router as disease_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -60,3 +61,8 @@ app.include_router(
     tags=["Market"],
 )
 app.include_router(schemes_router)
+app.include_router(
+    disease_router,
+    prefix="/api/disease",
+    tags=["Disease Detection"],
+)
