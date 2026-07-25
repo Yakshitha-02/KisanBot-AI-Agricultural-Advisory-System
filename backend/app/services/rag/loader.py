@@ -2,6 +2,13 @@ from pathlib import Path
 
 from langchain_community.document_loaders import PyPDFLoader
 
+def load_single_document(pdf_path: str):
+
+    print(f"Loading: {pdf_path}")
+
+    loader = PyPDFLoader(pdf_path)
+
+    return loader.load()
 
 def load_documents():
 

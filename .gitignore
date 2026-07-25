@@ -123,3 +123,4 @@ backend/output.wav
 
 # Temporary files
 backend/temp/
+backend/uploads/

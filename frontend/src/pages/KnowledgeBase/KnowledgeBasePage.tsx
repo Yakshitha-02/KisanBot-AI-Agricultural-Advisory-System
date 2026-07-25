@@ -1,6 +1,8 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { AuthContext } from "../../context/AuthContext";
+import { documentAPI } from "../../services/api";
+
 import {
   FiUpload,
   FiSearch,
@@ -9,91 +11,153 @@ import {
   FiFolder,
 } from "react-icons/fi";
 
-const stats = [
-  {
-    title: "Documents",
-    value: "156",
-    icon: <FiFileText size={26} />,
-    color: "bg-emerald-100 text-emerald-600",
-  },
-  {
-    title: "Indexed",
-    value: "152",
-    icon: <FiDatabase size={26} />,
-    color: "bg-blue-100 text-blue-600",
-  },
-  {
-    title: "Categories",
-    value: "8",
-    icon: <FiFolder size={26} />,
-    color: "bg-orange-100 text-orange-600",
-  },
-  {
-    title: "Storage",
-    value: "245 MB",
-    icon: <FiUpload size={26} />,
-    color: "bg-purple-100 text-purple-600",
-  },
-];
-
 const filters = [
   "All",
   "Crops",
   "Diseases",
   "Weather",
-  "Government",
-  "Soil",
+  "Farming",
+  "Market",
+  "Schemes",
+  "Recently-Uploaded"
 ];
-const documents = [
-  {
-    id: 1,
-    title: "Tomato Diseases.pdf",
-    source: "ICAR",
-    category: "Diseases",
-    pages: 245,
-    status: "Indexed",
-    size: "12.4 MB",
-    uploaded: "2 days ago",
-  },
-  {
-    id: 2,
-    title: "Rice Cultivation Guide.pdf",
-    source: "Government",
-    category: "Crops",
-    pages: 118,
-    status: "Indexed",
-    size: "7.8 MB",
-    uploaded: "Yesterday",
-  },
-  {
-    id: 3,
-    title: "Cotton Pest Management.pdf",
-    source: "KVK",
-    category: "Diseases",
-    pages: 176,
-    status: "Processing",
-    size: "15.1 MB",
-    uploaded: "Today",
-  },
-  {
-    id: 4,
-    title: "Weather Advisory Handbook.pdf",
-    source: "IMD",
-    category: "Weather",
-    pages: 82,
-    status: "Indexed",
-    size: "5.2 MB",
-    uploaded: "Last week",
-  },
-];
+
+interface Document {
+  id: number;
+  title: string;
+  filename: string;
+  filepath: string;
+  file_size: number;
+  pages: number;
+  language: string;
+  category: string;
+  status: string;
+  uploaded_by: number;
+  uploaded_at: string;
+}
 
 function KnowledgeBasePage() {
-  // Later this will come from login
   const { user } = useContext(AuthContext);
-const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin";
 
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [search, setSearch] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("All");
+  const [loading, setLoading] = useState(true);
+
+  const loadDocuments = async () => {
+    try {
+      const data = await documentAPI.getAll();
+      setDocuments(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDocuments();
+  }, []);
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Delete this document?")) return;
+
+    try {
+      await documentAPI.delete(id);
+      loadDocuments();
+    } catch (err) {
+      console.error(err);
+      alert("Unable to delete document.");
+    }
+  };
+  const handlePreview = (id: number) => {
+  window.open(
+    documentAPI.preview(id),
+    "_blank"
+  );
+};
+const handleDownload = (id: number) => {
+  window.open(
+    documentAPI.download(id),
+    "_blank"
+  );
+};
+
+  const handleUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    try {
+      await documentAPI.upload(file);
+      loadDocuments();
+      alert("Document uploaded successfully.");
+    } catch (err: any) {
+      alert(
+        err?.response?.data?.detail ??
+          "Upload failed."
+      );
+    }
+  };
+
+  const filteredDocuments = documents.filter((doc) => {
+    const matchesSearch = doc.title
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    const matchesFilter =
+      selectedFilter === "All" ||
+      doc.category === selectedFilter;
+
+    return matchesSearch && matchesFilter;
+  });
+
+  const stats = [
+    {
+      title: "Documents",
+      value: documents.length,
+      icon: <FiFileText size={26} />,
+      color: "bg-emerald-100 text-emerald-600",
+    },
+    {
+      title: "Uploaded",
+      value: documents.filter(
+        (d) => d.status === "Uploaded"
+      ).length,
+      icon: <FiDatabase size={26} />,
+      color: "bg-blue-100 text-blue-600",
+    },
+    {
+      title: "Categories",
+      value: new Set(
+        documents.map((d) => d.category)
+      ).size,
+      icon: <FiFolder size={26} />,
+      color: "bg-orange-100 text-orange-600",
+    },
+    {
+      title: "Storage",
+      value:
+        (
+          documents.reduce(
+            (sum, d) => sum + d.file_size,
+            0
+          ) /
+          1024 /
+          1024
+        ).toFixed(2) + " MB",
+      icon: <FiUpload size={26} />,
+      color: "bg-purple-100 text-purple-600",
+    },
+  ];
+
+  useEffect(() => {
+    loadDocuments();
+  }, []);
+
 
   return (
     <motion.div
@@ -101,7 +165,7 @@ const isAdmin = user?.role === "admin";
       animate={{ opacity: 1 }}
       className="space-y-8"
     >
-      {/* Hero */}
+            {/* Hero */}
 
       <div className="rounded-3xl bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 p-8 text-white shadow-xl">
 
@@ -110,29 +174,34 @@ const isAdmin = user?.role === "admin";
           <div>
 
             <h1 className="text-4xl font-bold">
-
               📚 Knowledge Base
-
             </h1>
 
             <p className="mt-3 max-w-2xl text-emerald-100">
-
               Manage agricultural documents that power KisanBot AI.
               Upload PDFs, organize resources, and maintain the
               knowledge repository.
-
             </p>
 
           </div>
 
           {isAdmin && (
-            <button
-              className="flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-emerald-700 transition hover:scale-105"
-            >
+
+            <label className="flex cursor-pointer items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-emerald-700 transition hover:scale-105">
+
               <FiUpload />
 
               Upload Document
-            </button>
+
+              <input
+                type="file"
+                accept=".pdf"
+                hidden
+                onChange={handleUpload}
+              />
+
+            </label>
+
           )}
 
         </div>
@@ -146,8 +215,8 @@ const isAdmin = user?.role === "admin";
         {stats.map((item) => (
 
           <motion.div
-            whileHover={{ y: -4 }}
             key={item.title}
+            whileHover={{ y: -4 }}
             className="rounded-3xl bg-white p-6 shadow-md"
           >
 
@@ -156,22 +225,16 @@ const isAdmin = user?.role === "admin";
               <div>
 
                 <p className="text-slate-500">
-
                   {item.title}
-
                 </p>
 
                 <h2 className="mt-2 text-3xl font-bold">
-
                   {item.value}
-
                 </h2>
 
               </div>
 
-              <div
-                className={`rounded-2xl p-4 ${item.color}`}
-              >
+              <div className={`rounded-2xl p-4 ${item.color}`}>
                 {item.icon}
               </div>
 
@@ -204,8 +267,6 @@ const isAdmin = user?.role === "admin";
 
         </div>
 
-        {/* Filters */}
-
         <div className="mt-6 flex flex-wrap gap-3">
 
           {filters.map((filter) => (
@@ -219,7 +280,9 @@ const isAdmin = user?.role === "admin";
                   : "bg-slate-100 hover:bg-slate-200"
               }`}
             >
+
               {filter}
+
             </button>
 
           ))}
@@ -237,156 +300,178 @@ const isAdmin = user?.role === "admin";
           <div>
 
             <h2 className="text-2xl font-bold">
-
               Documents
-
             </h2>
 
             <p className="text-slate-500">
-
               Agricultural resources available for AI retrieval
-
             </p>
 
           </div>
 
         </div>
 
-        {<div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {loading ? (
 
-  {documents.map((doc) => (
+          <div className="rounded-2xl bg-white p-12 text-center shadow">
 
-    <motion.div
-      key={doc.id}
-      whileHover={{ y: -6 }}
-      transition={{ duration: 0.2 }}
-      className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-xl"
-    >
-
-      {/* Top */}
-
-      <div className="flex items-start justify-between">
-
-        <div className="flex items-center gap-4">
-
-          <div className="rounded-2xl bg-emerald-100 p-4">
-
-            <FiFileText
-              size={28}
-              className="text-emerald-600"
-            />
+            Loading documents...
 
           </div>
 
-          <div>
+        ) : filteredDocuments.length === 0 ? (
 
-            <h3 className="font-semibold text-lg">
+          <div className="rounded-2xl bg-white p-12 text-center shadow">
 
-              {doc.title}
-
-            </h3>
-
-            <p className="text-sm text-slate-500">
-
-              {doc.source}
-
-            </p>
+            No documents found.
 
           </div>
+
+        ) : (
+
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {filteredDocuments.map((doc) => (
+
+  <motion.div
+    key={doc.id}
+    whileHover={{ y: -6 }}
+    transition={{ duration: 0.2 }}
+    className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-xl"
+  >
+
+    {/* Header */}
+
+    <div className="flex items-start justify-between">
+
+      <div className="flex items-center gap-4">
+
+        <div className="rounded-2xl bg-emerald-100 p-4">
+
+          <FiFileText
+            size={28}
+            className="text-emerald-600"
+          />
+
+        </div>
+
+        <div>
+
+          <h3 className="font-semibold text-lg break-words">
+
+            {doc.title}
+
+          </h3>
+
+          <p className="text-sm text-slate-500">
+
+            Uploaded by Admin
+
+          </p>
 
         </div>
 
       </div>
 
-      {/* Info */}
+    </div>
 
-      <div className="mt-6 flex flex-wrap gap-2">
+    {/* Information */}
 
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs">
+    <div className="mt-6 flex flex-wrap gap-2">
 
-          {doc.category}
+      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs">
 
-        </span>
+        {doc.category}
 
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs">
+      </span>
 
-          {doc.pages} Pages
+      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs">
 
-        </span>
+        {doc.pages} Pages
 
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs">
+      </span>
 
-          {doc.size}
+      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs">
 
-        </span>
+        {(doc.file_size / 1024).toFixed(1)} KB
 
-      </div>
+      </span>
 
-      {/* Status */}
+      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs">
 
-      <div className="mt-6 flex items-center justify-between">
+        {doc.language}
 
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            doc.status === "Indexed"
-              ? "bg-green-100 text-green-700"
-              : "bg-yellow-100 text-yellow-700"
-          }`}
-        >
-          {doc.status === "Indexed"
-            ? "🟢 Indexed"
-            : "🟡 Processing"}
-        </span>
+      </span>
 
-        <span className="text-xs text-slate-500">
+    </div>
 
-          {doc.uploaded}
+    {/* Status */}
 
-        </span>
+    <div className="mt-6 flex items-center justify-between">
 
-      </div>
+      <span
+  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+    doc.status === "Indexed"
+      ? "bg-green-100 text-green-700"
+      : doc.status === "Processing"
+      ? "bg-yellow-100 text-yellow-700"
+      : doc.status === "Failed"
+      ? "bg-red-100 text-red-700"
+      : "bg-blue-100 text-blue-700"
+  }`}
+>
+  {doc.status === "Indexed"
+    ? "🟢 Indexed"
+    : doc.status === "Processing"
+    ? "🟡 Processing"
+    : doc.status === "Failed"
+    ? "🔴 Failed"
+    : "🔵 Uploaded"}
+</span>
 
-      {/* Divider */}
+      <span className="text-xs text-slate-500">
 
-      <div className="my-6 border-t" />
+        {new Date(doc.uploaded_at).toLocaleDateString()}
 
-      {/* Actions */}
+      </span>
 
-      <div className="flex flex-wrap gap-3">
+    </div>
 
-        <button className="flex flex-1 items-center justify-center gap-2 rounded-xl border py-2 transition hover:bg-slate-50">
+    <div className="my-6 border-t" />
 
-          👁 Preview
+    {/* Actions */}
 
-        </button>
+    <div className="flex flex-wrap gap-3">
 
-        {isAdmin && (
+      <button
+  onClick={() => handlePreview(doc.id)}
+  className="flex flex-1 items-center justify-center gap-2 rounded-xl border py-2 transition hover:bg-slate-50"
+>
+  👁 Preview
+</button>
+<button
+  onClick={() => handleDownload(doc.id)}
+  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-green-200 py-2 text-green-700 transition hover:bg-green-50"
+>
+  ⬇ Download
+</button>
 
-          <button className="flex items-center justify-center rounded-xl border border-blue-200 px-4 py-2 text-blue-600 transition hover:bg-blue-50">
+      {isAdmin && (
+  <button
+    onClick={() => handleDelete(doc.id)}
+    className="rounded-xl border border-red-200 px-4 py-2 text-red-600 transition hover:bg-red-50"
+  >
+    🗑 Delete
+  </button>
+)}
 
-            ✏ Edit
+</div>
 
-          </button>
+  </motion.div>
+
+))}
+          </div>
 
         )}
-
-        {isAdmin && (
-
-          <button className="flex items-center justify-center rounded-xl border border-red-200 px-4 py-2 text-red-600 transition hover:bg-red-50">
-
-            🗑
-
-          </button>
-
-        )}
-
-      </div>
-
-    </motion.div>
-
-  ))}
-
-</div>}
 
       </div>
 
