@@ -154,6 +154,11 @@ const handleDownload = (id: number) => {
     },
   ];
 
+  useEffect(() => {
+    loadDocuments();
+  }, []);
+
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -451,19 +456,15 @@ const handleDownload = (id: number) => {
 </button>
 
       {isAdmin && (
+  <button
+    onClick={() => handleDelete(doc.id)}
+    className="rounded-xl border border-red-200 px-4 py-2 text-red-600 transition hover:bg-red-50"
+  >
+    🗑 Delete
+  </button>
+)}
 
-        <button
-          onClick={() => handleDelete(doc.id)}
-          className="rounded-xl border border-red-200 px-4 py-2 text-red-600 transition hover:bg-red-50"
-        >
-
-          🗑 Delete
-
-        </button>
-
-      )}
-
-    </div>
+</div>
 
   </motion.div>
 
