@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { AuthContext } from "../../context/AuthContext";
 import {
@@ -9,33 +9,6 @@ import {
   FiFolder,
 } from "react-icons/fi";
 
-const stats = [
-  {
-    title: "Documents",
-    value: "156",
-    icon: <FiFileText size={26} />,
-    color: "bg-emerald-100 text-emerald-600",
-  },
-  {
-    title: "Indexed",
-    value: "152",
-    icon: <FiDatabase size={26} />,
-    color: "bg-blue-100 text-blue-600",
-  },
-  {
-    title: "Categories",
-    value: "8",
-    icon: <FiFolder size={26} />,
-    color: "bg-orange-100 text-orange-600",
-  },
-  {
-    title: "Storage",
-    value: "245 MB",
-    icon: <FiUpload size={26} />,
-    color: "bg-purple-100 text-purple-600",
-  },
-];
-
 const filters = [
   "All",
   "Crops",
@@ -44,56 +17,66 @@ const filters = [
   "Government",
   "Soil",
 ];
-const documents = [
-  {
-    id: 1,
-    title: "Tomato Diseases.pdf",
-    source: "ICAR",
-    category: "Diseases",
-    pages: 245,
-    status: "Indexed",
-    size: "12.4 MB",
-    uploaded: "2 days ago",
-  },
-  {
-    id: 2,
-    title: "Rice Cultivation Guide.pdf",
-    source: "Government",
-    category: "Crops",
-    pages: 118,
-    status: "Indexed",
-    size: "7.8 MB",
-    uploaded: "Yesterday",
-  },
-  {
-    id: 3,
-    title: "Cotton Pest Management.pdf",
-    source: "KVK",
-    category: "Diseases",
-    pages: 176,
-    status: "Processing",
-    size: "15.1 MB",
-    uploaded: "Today",
-  },
-  {
-    id: 4,
-    title: "Weather Advisory Handbook.pdf",
-    source: "IMD",
-    category: "Weather",
-    pages: 82,
-    status: "Indexed",
-    size: "5.2 MB",
-    uploaded: "Last week",
-  },
-];
 
 function KnowledgeBasePage() {
-  // Later this will come from login
   const { user } = useContext(AuthContext);
-const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin";
 
   const [search, setSearch] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("All");
+
+  const [documents, setDocuments] = useState<any[]>([]);
+
+  const [stats, setStats] = useState({
+    documents: 0,
+    indexed: 0,
+    categories: 0,
+    storage_mb: 0,
+  });
+
+  const statCards = [
+    {
+      title: "Documents",
+      value: stats.documents,
+      icon: <FiFileText size={26} />,
+      color: "bg-emerald-100 text-emerald-600",
+    },
+    {
+      title: "Indexed",
+      value: stats.indexed,
+      icon: <FiDatabase size={26} />,
+      color: "bg-blue-100 text-blue-600",
+    },
+    {
+      title: "Categories",
+      value: stats.categories,
+      icon: <FiFolder size={26} />,
+      color: "bg-orange-100 text-orange-600",
+    },
+    {
+      title: "Storage",
+      value: `${stats.storage_mb} MB`,
+      icon: <FiUpload size={26} />,
+      color: "bg-purple-100 text-purple-600",
+    },
+  ];
+
+  useEffect(() => {
+    loadDocuments();
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    const res = await fetch("http://127.0.0.1:8000/api/documents/stats");
+    const data = await res.json();
+    setStats(data);
+  };
+
+  const loadDocuments = async () => {
+    const res = await fetch("http://127.0.0.1:8000/api/documents/documents");
+    const data = await res.json();
+    setDocuments(data);
+  };
 
   return (
     <motion.div
@@ -126,14 +109,38 @@ const isAdmin = user?.role === "admin";
           </div>
 
           {isAdmin && (
-            <button
-              className="flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-emerald-700 transition hover:scale-105"
-            >
-              <FiUpload />
+  <>
+    <input
+      type="file"
+      id="uploadPDF"
+      accept=".pdf"
+      hidden
+      onChange={async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-              Upload Document
-            </button>
-          )}
+        const formData = new FormData();
+        formData.append("file", file);
+
+        await fetch("http://127.0.0.1:8000/api/documents/upload-document", {
+          method: "POST",
+          body: formData,
+        });
+
+        await loadDocuments();
+await loadStats();
+      }}
+    />
+
+    <button
+      onClick={() => document.getElementById("uploadPDF")?.click()}
+      className="flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-emerald-700 transition hover:scale-105"
+    >
+      <FiUpload />
+      Upload Document
+    </button>
+  </>
+)}
 
         </div>
 
@@ -143,7 +150,7 @@ const isAdmin = user?.role === "admin";
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
 
-        {stats.map((item) => (
+        {statCards.map((item) => (
 
           <motion.div
             whileHover={{ y: -4 }}
@@ -354,32 +361,54 @@ const isAdmin = user?.role === "admin";
 
       <div className="flex flex-wrap gap-3">
 
-        <button className="flex flex-1 items-center justify-center gap-2 rounded-xl border py-2 transition hover:bg-slate-50">
+        <button
+  onClick={() =>
+    window.open(
+  `http://127.0.0.1:8000/api/documents/preview/${encodeURIComponent(doc.filename)}`,
+  "_blank"
+)
+  }
+  className="flex flex-1 items-center justify-center gap-2 rounded-xl border py-2 transition hover:bg-slate-50"
+>
+  👁 Preview
+</button>
+<button
+  onClick={async () => {
+    const language = prompt("Enter language (Hindi, Kannada, Tamil, Telugu)");
 
-          👁 Preview
+    if (!language) return;
 
-        </button>
+    const response = await fetch(
+  `http://127.0.0.1:8000/api/documents/translate/${encodeURIComponent(doc.filename)}/${language}`
+);
 
-        {isAdmin && (
+    const data = await response.json();
 
-          <button className="flex items-center justify-center rounded-xl border border-blue-200 px-4 py-2 text-blue-600 transition hover:bg-blue-50">
+    console.log(data);
+    console.log(data.translation);
+  }}
+  className="flex items-center justify-center rounded-xl border border-green-200 px-4 py-2 text-green-600 hover:bg-green-50"
+>
+  🌐 Translate
+</button>
 
-            ✏ Edit
+        <button
+  onClick={async () => {
+    if (!window.confirm("Delete this PDF?")) return;
 
-          </button>
+    await fetch(
+  `http://127.0.0.1:8000/api/documents/delete/${encodeURIComponent(doc.filename)}`,
+  {
+    method: "DELETE",
+  }
+);
 
-        )}
-
-        {isAdmin && (
-
-          <button className="flex items-center justify-center rounded-xl border border-red-200 px-4 py-2 text-red-600 transition hover:bg-red-50">
-
-            🗑
-
-          </button>
-
-        )}
-
+    await loadDocuments();
+  }}
+  className="flex items-center justify-center rounded-xl border border-red-200 px-4 py-2 text-red-600 transition hover:bg-red-50"
+>
+  🗑
+</button>
       </div>
 
     </motion.div>
