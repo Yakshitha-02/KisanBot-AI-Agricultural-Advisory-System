@@ -52,5 +52,16 @@ export const documentAPI = {
 download(id: number) {
     return `${API_BASE_URL}/documents/download/${id}`;
 },
+translate: async (id: number, language: string) => {
+    const response = await api.post(
+        `/documents/translate/${id}/${language}`,
+        {},
+        {
+            responseType: "blob",
+        }
+    );
+
+    return response.data;
+},
 };
 export default api;

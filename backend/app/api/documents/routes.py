@@ -11,6 +11,12 @@ from app.api.dependencies import (
 from app.models.user import User
 from fastapi.responses import FileResponse
 from app.services.indexing_service import IndexingService
+from fastapi.responses import StreamingResponse
+from app.services.translator import translate_from_english
+from app.utils.pdf_utils import extract_text
+from app.utils.pdf_generator import generate_pdf
+from io import BytesIO
+from app.models.document import Document
 
 router = APIRouter()
 
@@ -117,4 +123,56 @@ async def download_document(
         path=document.filepath,
         filename=document.filename,
         media_type="application/pdf",
+    )
+@router.post("/translate/{document_id}/{language}")
+async def translate_document(
+    document_id: int,
+    language: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    document = (
+        db.query(Document)
+        .filter(Document.id == document_id)
+        .first()
+    )
+
+    if not document:
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found."
+        )
+
+    # Extract English text
+    text = extract_text(document.filepath)
+
+    if not text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to extract text from PDF."
+        )
+
+    # Translate
+    translated_text = translate_from_english(
+        text,
+        language,
+    )
+
+    # Generate translated PDF
+    pdf_buffer = generate_pdf(
+        translated_text,
+        language,
+    )
+
+    filename = (
+        f"{document.title}_{language}.pdf"
+    )
+
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition":
+            f'attachment; filename="{filename}"'
+        },
     )

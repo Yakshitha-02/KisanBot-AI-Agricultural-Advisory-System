@@ -10,7 +10,7 @@ import {
   FiFileText,
   FiFolder,
 } from "react-icons/fi";
-
+import { FiLoader } from "react-icons/fi";
 const filters = [
   "All",
   "Crops",
@@ -21,7 +21,13 @@ const filters = [
   "Schemes",
   "Recently-Uploaded"
 ];
-
+const languages = [
+    "Hindi",
+    "Telugu",
+    "Kannada",
+    "Tamil",
+    "Malayalam",
+];
 interface Document {
   id: number;
   title: string;
@@ -44,7 +50,10 @@ function KnowledgeBasePage() {
   const [search, setSearch] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [loading, setLoading] = useState(true);
-
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [showTranslateModal, setShowTranslateModal] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("Hindi");
+  const [isTranslating, setIsTranslating] = useState(false);
   const loadDocuments = async () => {
     try {
       const data = await documentAPI.getAll();
@@ -82,6 +91,35 @@ const handleDownload = (id: number) => {
     documentAPI.download(id),
     "_blank"
   );
+};
+const handleTranslate = async () => {
+    if (!selectedDocument) return;
+
+    setIsTranslating(true);
+
+    try {
+        const pdf = await documentAPI.translate(
+            selectedDocument.id,
+            selectedLanguage
+        );
+
+        const blobUrl = window.URL.createObjectURL(pdf);
+
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `${selectedDocument.title}_${selectedLanguage}.pdf`;
+        a.click();
+
+        window.URL.revokeObjectURL(blobUrl);
+
+        setShowTranslateModal(false);
+
+    } catch (err) {
+        alert("Translation failed.");
+        console.error(err);
+    } finally {
+        setIsTranslating(false);
+    }
 };
 
   const handleUpload = async (
@@ -454,6 +492,18 @@ const handleDownload = (id: number) => {
 >
   ⬇ Download
 </button>
+<button
+    onClick={() => {
+
+        setSelectedDocument(doc);
+
+        setShowTranslateModal(true);
+
+    }}
+    className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-blue-200 py-2 text-blue-700 transition hover:bg-blue-50"
+>
+    🌐 Translate
+</button>
 
       {isAdmin && (
   <button
@@ -465,13 +515,70 @@ const handleDownload = (id: number) => {
 )}
 
 </div>
-
   </motion.div>
 
 ))}
           </div>
 
         )}
+        {showTranslateModal && (
+<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+
+<div className="w-[420px] rounded-2xl bg-white p-6 shadow-xl">
+
+<h2 className="text-2xl font-bold mb-5">
+Translate PDF
+</h2>
+
+<select
+  value={selectedLanguage}
+  onChange={(e) => setSelectedLanguage(e.target.value)}
+  className="w-full rounded-xl border border-gray-300 p-3 bg-white"
+>
+  {languages.map((lang) => (
+    <option key={lang} value={lang}>
+      {lang}
+    </option>
+  ))}
+
+</select>
+
+<div className="mt-6 flex justify-end gap-3">
+
+<button
+onClick={()=>setShowTranslateModal(false)}
+className="rounded-xl border px-5 py-2"
+>
+
+Cancel
+
+</button>
+
+<button
+    onClick={handleTranslate}
+    disabled={isTranslating}
+    className={`flex items-center gap-2 rounded-xl px-5 py-2 text-white transition ${
+        isTranslating
+            ? "bg-emerald-400 cursor-not-allowed"
+            : "bg-emerald-600 hover:bg-emerald-700"
+    }`}
+>
+    {isTranslating ? (
+        <>
+            <FiLoader className="animate-spin" />
+            Translating...
+        </>
+    ) : (
+        "Generate PDF"
+    )}
+</button>
+
+</div>
+
+</div>
+
+</div>
+)}
 
       </div>
 
