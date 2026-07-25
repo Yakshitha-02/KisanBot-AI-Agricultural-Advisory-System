@@ -9,6 +9,7 @@ import {
   FiMessageCircle,
   FiBell,
   FiLogOut,
+  FiCamera
 } from "react-icons/fi";
 
 function Header() {
@@ -21,27 +22,32 @@ function Header() {
   };
 
   const navItems = [
-    {
-      to: user?.role === "admin" ? "/admin/dashboard" : "/farmer/dashboard",
-      label: "Dashboard",
-      icon: <FiHome />,
-    },
-    {
-      to: "/chat",
-      label: "Chat",
-      icon: <FiMessageSquare />,
-    },
-    {
-      to: "/knowledge-base",
-      label: "Knowledge",
-      icon: <FiBookOpen />,
-    },
-    {
-      to: "/feedback",
-      label: "Feedback",
-      icon: <FiMessageCircle />,
-    },
-  ];
+  {
+    to: user?.role === "admin" ? "/admin/dashboard" : "/farmer/dashboard",
+    label: "Dashboard",
+    icon: <FiHome />,
+  },
+  {
+    to: "/chat",
+    label: "Chat",
+    icon: <FiMessageSquare />,
+  },
+  {
+    to: "/crop-disease",
+    label: "Disease Detection",
+    icon: <FiCamera />,
+  },
+  {
+    to: "/knowledge-base",
+    label: "Knowledge",
+    icon: <FiBookOpen />,
+  },
+  {
+    to: "/feedback",
+    label: "Feedback",
+    icon: <FiMessageCircle />,
+  },
+];
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/30 bg-white/70 backdrop-blur-xl shadow-sm">

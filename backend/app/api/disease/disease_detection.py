@@ -19,6 +19,8 @@ async def predict_disease(file: UploadFile = File(...)):
     prediction = model_predict_disease(file_path)
 
     return {
-        "filename": file.filename,
-        "prediction": prediction
-    }
+    "filename": file.filename,
+    "prediction": prediction["prediction"],
+    "top_predictions": prediction["top_predictions"],
+    "warning": prediction["warning"],
+}
