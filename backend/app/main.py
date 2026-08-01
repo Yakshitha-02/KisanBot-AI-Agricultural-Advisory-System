@@ -16,7 +16,7 @@ from app.api.weather.routes import router as weather_router
 from app.api.market.routes import router as market_router
 from app.api.schemes.router import router as schemes_router
 from app.api.disease.disease_detection import router as disease_router
-
+from app.api.feedback.routes import router as feedback_router
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -65,4 +65,9 @@ app.include_router(
     disease_router,
     prefix="/api/disease",
     tags=["Disease Detection"],
+)
+app.include_router(
+    feedback_router,
+    prefix="/api/feedback",
+    tags=["Feedback"],
 )

@@ -6,12 +6,13 @@ import {
   FiThumbsUp,
   FiThumbsDown,
   FiVolume2,
-  FiRefreshCw,
   FiCheck,
 } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { feedbackService } from "../../services/feedback";
+import { chatService } from "../../services/chat";
 
 interface ChatMessageItem {
   id: string;
@@ -33,6 +34,8 @@ function ChatMessage({
 
   const [copied, setCopied] = useState(false);
   const [speaking,setSpeaking]=useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [comment, setComment] = useState("");
 
   const copyMessage = async () => {
     await navigator.clipboard.writeText(message.content);
@@ -79,6 +82,42 @@ useEffect(()=>{
 return ()=>speechSynthesis.cancel();
 
 },[]);
+const handlePositive = async () => {
+  try {
+    await chatService.feedback({
+      message_id: Number(message.id),
+      rating: "positive",
+      comment: "",
+    });
+
+    alert("Thank you for your feedback 🌾");
+  } catch (err) {
+    console.error(err);
+    alert("Unable to submit feedback.");
+  }
+};
+const handleNegative = async () => {
+  try {
+    await chatService.feedback({
+      message_id: Number(message.id),
+      rating: "negative",
+      comment,
+    });
+
+    setShowDialog(false);
+
+    setComment("");
+
+    alert("Thank you for your feedback 🌾");
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("Unable to submit feedback.");
+
+  }
+};
 
   return (
     <motion.div
@@ -195,22 +234,20 @@ Speak
 )}
 
                   <button
+                    onClick={handlePositive}
                     className="rounded-lg p-2 hover:bg-slate-100"
                   >
                     <FiThumbsUp />
                   </button>
 
                   <button
-                    className="rounded-lg p-2 hover:bg-slate-100"
-                  >
-                    <FiThumbsDown />
-                  </button>
+                   onClick={() => setShowDialog(true)}
+                   className="rounded-lg p-2 hover:bg-slate-100"
+                   >
 
-                  <button
-                    className="rounded-lg p-2 hover:bg-slate-100"
-                  >
-                    <FiRefreshCw />
-                  </button>
+                   <FiThumbsDown/>
+
+                   </button>
 
                 </div>
               )}
@@ -220,6 +257,46 @@ Speak
 
         </div>
       </div>
+      {showDialog && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+
+    <div className="w-[420px] rounded-xl bg-white p-6 shadow-xl">
+
+      <h2 className="mb-4 text-lg font-semibold">
+
+        Why wasn't this response helpful?
+
+      </h2>
+
+      <textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        className="h-32 w-full rounded-lg border p-3"
+        placeholder="Tell us how we can improve..."
+      />
+
+      <div className="mt-4 flex justify-end gap-3">
+
+        <button
+          onClick={() => setShowDialog(false)}
+          className="rounded-lg border px-4 py-2"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleNegative}
+          className="rounded-lg bg-red-600 px-4 py-2 text-white"
+        >
+          Submit
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
     </motion.div>
   );
 }

@@ -43,7 +43,11 @@ export const chatService = {
     return api.delete(`/chatbot/session/${sessionId}`);
   },
 
-  feedback(payload: Record<string, unknown>) {
-    return api.post("/chatbot/feedback", payload);
-  },
+  feedback(payload: {
+  message_id: number;
+  rating: "positive" | "negative";
+  comment?: string;
+}) {
+  return api.post("/feedback", payload);
+}
 };

@@ -343,19 +343,14 @@ const handleSendMessage = async (
       );
 
     const botMessage: ChatMessageItem = {
-      id: Date.now() + "-bot",
-      role: "assistant",
-      content:
-        response.data.answer ??
-        "No response generated.",
-      timestamp: new Date().toLocaleTimeString(
-        [],
-        {
-          hour: "2-digit",
-          minute: "2-digit",
-        }
-      ),
-    };
+    id: String(response.data.message_id),
+    role: "assistant",
+    content: response.data.answer ?? "No response generated.",
+    timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+    }),
+};
 
     setMessages((prev) => [
       ...prev,

@@ -112,14 +112,16 @@ def ask(
         session.title = request.question[:40]
 
     db.commit()
+    db.refresh(assistant_message)
 
     return {
-        "session_id": session.id,
-        "language": language,
-        "answer": final_answer,
-        "confidence": confidence,
-        "score": score,
-    }
+     "session_id": session.id,
+     "message_id": assistant_message.id,
+     "language": language,
+     "answer": final_answer,
+     "confidence": confidence,
+     "score": score,
+}
 
 @router.post("/intent")
 def detect_intent(request: AskRequest):
@@ -192,15 +194,6 @@ def get_messages(
 
     return session.messages
 
-
-# -----------------------------
-# Feedback
-# -----------------------------
-@router.post("/feedback")
-def feedback(payload: FeedbackRequest):
-    return {
-        "message": "Feedback received successfully."
-    }
 # -----------------------------
 # Delete Chat Session
 # -----------------------------
