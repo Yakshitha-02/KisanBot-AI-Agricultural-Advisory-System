@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { Leaf } from "lucide-react";
 import {
   FiHome,
@@ -9,12 +10,16 @@ import {
   FiMessageCircle,
   FiBell,
   FiLogOut,
-  FiCamera
+  FiCamera,
+  FiSettings,
+  FiUser,
+  FiChevronDown,
 } from "react-icons/fi";
 
 function Header() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [showProfile, setShowProfile] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -103,46 +108,89 @@ function Header() {
         <div className="flex items-center gap-4">
                     {user ? (
             <>
-              {/* Notification */}
+              
+              {/* Profile Dropdown */}
 
-              <button
-                className="relative rounded-full bg-white p-3 shadow-lg transition hover:bg-emerald-50"
-                type="button"
-              >
-                <FiBell size={20} />
+<div className="relative">
 
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
-              </button>
+  <button
+    onClick={() => setShowProfile(!showProfile)}
+    className="flex items-center gap-3 rounded-full bg-white px-3 py-2 shadow-lg hover:bg-slate-50"
+  >
+    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-r from-emerald-600 to-green-700 text-lg font-bold text-white">
+      {(user.full_name || "F")[0].toUpperCase()}
+    </div>
 
-              {/* User Info */}
+    <FiChevronDown className="text-slate-500" />
+  </button>
 
-              <div className="hidden text-right sm:block">
-                <p className="font-semibold text-slate-900">
-                  {user.full_name || "Farmer"}
-                </p>
+  {showProfile && (
+    <div className="absolute right-0 mt-3 w-72 overflow-hidden rounded-2xl border bg-white shadow-2xl">
 
-                <p className="text-xs capitalize text-slate-500">
-                  {user.role}
-                </p>
-              </div>
+      {/* User */}
 
-              {/* Avatar */}
+      <div className="border-b p-5">
 
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-r from-emerald-600 to-green-700 text-lg font-bold text-white">
-                {(user.full_name || "F")[0].toUpperCase()}
-              </div>
+        <div className="flex items-center gap-3">
 
-              {/* Logout */}
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-600 font-bold text-white">
+            {(user.full_name || "F")[0].toUpperCase()}
+          </div>
 
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleLogout}
-                className="flex items-center gap-2 rounded-full bg-red-500 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-red-600"
-              >
-                <FiLogOut />
-                Logout
-              </motion.button>
+          <div>
+
+            <h3 className="font-semibold">
+              {user.full_name}
+            </h3>
+
+            <p className="text-sm text-slate-500">
+              {user.email}
+            </p>
+
+            <span className="text-xs text-emerald-600 capitalize">
+              🌾 {user.role}
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Menu */}
+
+      <button
+        onClick={() => {
+          navigate("/settings");
+          setShowProfile(false);
+        }}
+        className="flex w-full items-center gap-3 px-5 py-4 text-left hover:bg-slate-100"
+      >
+        <FiSettings />
+        Settings
+      </button>
+
+      <button
+        className="flex w-full items-center gap-3 px-5 py-4 text-left hover:bg-slate-100"
+      >
+        <FiBell />
+        Notifications
+      </button>
+
+      <div className="border-t" />
+
+      <button
+        onClick={handleLogout}
+        className="flex w-full items-center gap-3 px-5 py-4 text-left text-red-600 hover:bg-red-50"
+      >
+        <FiLogOut />
+        Logout
+      </button>
+
+    </div>
+  )}
+
+</div>
             </>
           ) : (
             <>

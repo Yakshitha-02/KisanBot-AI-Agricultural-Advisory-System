@@ -9,12 +9,10 @@ from app.services.intent_classifier import classify_intent
 from app.services.ner import extract_entities
 from app.services.city_extractor import extract_city
 from app.services.weather.weather_service import get_current_weather
-
-# Change this import according to your project structure
 from app.services.market.market_service import get_market_price
 
 
-def process_question(question: str):
+def process_question(question, history=None):
 
     # --------------------------
     # Detect Language
@@ -30,13 +28,15 @@ def process_question(question: str):
     # Intent Classification
     # --------------------------
     intent = classify_intent(english_question)
+
     print("English Question:", english_question)
+    print("Intent:", intent)
+
     # --------------------------
     # Named Entity Recognition
     # --------------------------
     entities = extract_entities(english_question)
 
-    print("Intent:", intent)
     print("Entities:", entities)
 
     confidence = None
@@ -50,9 +50,10 @@ def process_question(question: str):
         city = extract_city(english_question)
 
         if city:
-         weather = get_current_weather(city)
 
-         answer = f"""
+            weather = get_current_weather(city)
+
+            answer = f"""
 🌦 Weather Report
 
 City: {weather['city']}
@@ -61,6 +62,7 @@ Humidity: {weather['humidity']}%
 Condition: {weather['description']}
 Wind Speed: {weather['wind_speed']} m/s
 """
+
         else:
             answer = "Please mention the city name."
 
@@ -69,8 +71,8 @@ Wind Speed: {weather['wind_speed']} m/s
     # --------------------------
     elif intent == "market_query":
 
-        commodity = entities["commodity"]
-        state = entities["state"]
+        commodity = entities.get("commodity")
+        state = entities.get("state")
 
         print("Commodity:", commodity)
         print("State:", state)
@@ -84,9 +86,9 @@ Wind Speed: {weather['wind_speed']} m/s
 
             if result:
 
-             if result["exact_state"]:
+                if result["exact_state"]:
 
-              answer = f"""
+                    answer = f"""
 🌾 Latest Market Price
 
 Commodity : {result['commodity']}
@@ -102,12 +104,12 @@ Modal Price : ₹{result['modal_price']} / Quintal
 Arrival Date : {result['arrival_date']}
 """
 
-             else:
+                else:
 
-              answer = f"""
+                    answer = f"""
 ⚠️ No current market price is available for {commodity} in {state}.
 
-Showing the latest available market price for {commodity}.
+Showing the latest available market price.
 
 Commodity : {result['commodity']}
 State : {result['state']}
@@ -141,7 +143,26 @@ Arrival Date : {result['arrival_date']}
     # --------------------------
     else:
 
-        rag_response = ask_rag(english_question)
+        conversation_history = ""
+
+        if history:
+            for msg in history:
+                conversation_history += (
+                    f"{msg.sender}: {msg.message}\n"
+                )
+
+        print("\n===== CONVERSATION HISTORY =====")
+        print(conversation_history)
+        print("================================\n")
+
+        rag_response = ask_rag(
+            question=english_question,
+            conversation_history=conversation_history,
+        )
+
+        print("===== RAG RESPONSE =====")
+        print(rag_response)
+        print("========================")
 
         answer = rag_response["answer"]
         confidence = rag_response["confidence"]

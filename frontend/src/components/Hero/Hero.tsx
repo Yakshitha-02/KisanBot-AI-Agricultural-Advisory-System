@@ -1,4 +1,6 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import {
   FiArrowRight,
   FiPlayCircle,
@@ -12,6 +14,22 @@ import {
 } from "lucide-react";
 
 function Hero() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleTryKisanBot = () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    if (user.role === "admin") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/farmer/dashboard");
+    }
+  };
+
   return (
     <section
       id="home"
@@ -82,25 +100,22 @@ function Hero() {
 
           {/* CTA */}
 
-          <div className="mt-10 flex flex-wrap gap-5">
+<div className="mt-10 flex flex-wrap gap-5">
 
-            <button className="flex items-center gap-3 rounded-2xl bg-emerald-600 px-8 py-4 font-semibold text-white shadow-xl transition hover:scale-105 hover:bg-emerald-700">
+  <button
+    onClick={handleTryKisanBot}
+    className="flex items-center gap-3 rounded-2xl bg-emerald-600 px-8 py-4 font-semibold text-white shadow-xl transition hover:scale-105 hover:bg-emerald-700"
+  >
+    Try KisanBot
+    <FiArrowRight />
+  </button>
 
-              Try KisanBot
+  <button className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-white px-8 py-4 font-semibold text-slate-700 transition hover:border-emerald-500 hover:text-emerald-600">
+    <FiPlayCircle />
+    Watch Demo
+  </button>
 
-              <FiArrowRight />
-
-            </button>
-
-            <button className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-white px-8 py-4 font-semibold text-slate-700 transition hover:border-emerald-500 hover:text-emerald-600">
-
-              <FiPlayCircle />
-
-              Watch Demo
-
-            </button>
-
-          </div>
+</div>
 
           {/* Technology Pills */}
 
