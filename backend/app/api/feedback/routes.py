@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, joinedload
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.database.session import get_db
 from app.models.feedback import Feedback
@@ -8,17 +8,31 @@ from app.schemas.feedback import (
     FeedbackResponse,
     AdminFeedbackResponse,
 )
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from app.utils.security import verify_access_token
+from app.models.user import User
 
 router = APIRouter()
-
+security = HTTPBearer()
 
 @router.post("/")
 def submit_feedback(
     feedback: FeedbackCreate,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ):
+    token = verify_access_token(credentials.credentials)
+
+    user = db.get(User, int(token["sub"]))
+
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+
     new_feedback = Feedback(
-        user_id=1,      # Temporary
+        user_id=user.id,
         message_id=feedback.message_id,
         rating=feedback.rating,
         comment=feedback.comment,
@@ -33,20 +47,25 @@ def submit_feedback(
         "feedback_id": new_feedback.id,
     }
 
-
 @router.get(
     "/my",
     response_model=list[FeedbackResponse],
 )
 def get_my_feedback(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ):
-    user_id = 1
+    token = verify_access_token(credentials.credentials)
+
+    user = db.get(User, int(token["sub"]))
+
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
 
     feedbacks = (
         db.query(Feedback)
         .options(joinedload(Feedback.message))
-        .filter(Feedback.user_id == user_id)
+        .filter(Feedback.user_id == user.id)
         .all()
     )
 

@@ -94,3 +94,7 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
 )
+    unanswered_queries = relationship(
+    "UnansweredQuery",
+    cascade="all, delete-orphan",
+)

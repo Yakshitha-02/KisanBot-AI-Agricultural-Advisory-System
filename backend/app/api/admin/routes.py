@@ -7,7 +7,7 @@ from app.database.session import get_db
 from app.models.user import User
 
 from app.schemas.user import UserResponse
-
+from app.models.unanswered_query import UnansweredQuery
 from app.services.admin_service import (
     dashboard_stats,
     get_all_users,
@@ -109,3 +109,33 @@ def remove_user(
     return {
         "message": "User deleted successfully"
     }
+@router.get("/unanswered")
+def unanswered_queries(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db),
+):
+    get_current_admin(credentials, db)
+
+    return (
+        db.query(UnansweredQuery)
+        .order_by(UnansweredQuery.created_at.desc())
+        .all()
+    )
+@router.patch("/unanswered/{query_id}")
+def resolve_query(
+    query_id: int,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db),
+):
+    get_current_admin(credentials, db)
+
+    query = db.get(UnansweredQuery, query_id)
+
+    if query is None:
+        raise HTTPException(404, "Query not found")
+
+    query.resolved = True
+
+    db.commit()
+
+    return {"message": "Resolved"}

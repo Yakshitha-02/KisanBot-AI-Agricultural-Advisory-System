@@ -26,6 +26,7 @@ from app.services.translator import (
 )
 
 from app.utils.security import verify_access_token
+from app.models.unanswered_query import UnansweredQuery
 
 router = APIRouter()
 security = HTTPBearer()
@@ -87,6 +88,18 @@ def ask(
     confidence = response.get("confidence")
     score = response.get("score")
 
+    # Save low-confidence questions for admin review
+    if confidence is not None:
+
+     if confidence.lower() == "low":
+
+        unanswered = UnansweredQuery(
+            user_id=user.id,
+            question=request.question,
+            confidence=0.0,
+        )
+
+        db.add(unanswered)
     # Save user message
     user_message = Message(
         session_id=session.id,
