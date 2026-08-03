@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useAuth } from "../../hooks/useAuth";
 import {
   FiBookOpen,
   FiCloudRain,
@@ -12,7 +13,27 @@ import OverviewCards from "../../components/dashboard/OverviewCards";
 
 function FarmerDashboardPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
+const getGreeting = () => {
+  const hour = new Date().getHours();
+
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+};
+
+const getSubtitle = () => {
+  const hour = new Date().getHours();
+
+  if (hour < 12)
+    return "Ready to check today's weather and crop conditions?";
+
+  if (hour < 17)
+    return "Need help with crop diseases, fertilizers, or market prices?";
+
+  return "How can i help you with your farming needs today?";
+};
   return (
     <div className="space-y-8">
 
@@ -26,37 +47,39 @@ function FarmerDashboardPage() {
 
         <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-center">
 
-          <div className="max-w-2xl">
+  <div className="max-w-2xl">
 
-            <h1 className="text-4xl font-bold">
-              🌾 Welcome Back!
-            </h1>
+    <p className="text-lg font-medium text-emerald-100">
+      {getGreeting()},
+    </p>
 
-            <p className="mt-4 text-lg text-emerald-100">
-              Ask KisanBot anything about crops, diseases,
-              fertilizers, weather forecasts or market prices.
-            </p>
+    <h1 className="mt-2 text-4xl font-bold">
+      {user?.full_name ?? "Farmer"} 👋
+    </h1>
 
-            <div className="mt-8 flex flex-wrap gap-4">
+    <p className="mt-4 text-lg text-emerald-100">
+      {getSubtitle()}
+    </p>
 
-              <button
-                onClick={() => navigate("/chat")}
-                className="rounded-xl bg-white px-7 py-3 font-semibold text-emerald-700 transition hover:scale-105"
-              >
-                🤖 Start Chat
-              </button>
+    <div className="mt-8 flex flex-wrap gap-4">
 
-              <button
-                onClick={() => navigate("/knowledge-base")}
-                className="rounded-xl border border-white/30 px-7 py-3 backdrop-blur transition hover:bg-white/10"
-              >
-                📚 Knowledge Library
-              </button>
+      <button
+        onClick={() => navigate("/chat")}
+        className="rounded-xl bg-white px-7 py-3 font-semibold text-emerald-700 transition hover:scale-105"
+      >
+        🤖 Start Chat
+      </button>
 
-            </div>
+      <button
+        onClick={() => navigate("/knowledge-base")}
+        className="rounded-xl border border-white/30 px-7 py-3 backdrop-blur transition hover:bg-white/10"
+      >
+        📚 Knowledge Library
+      </button>
 
-          </div>
+    </div>
 
+  </div>
           <div className="grid grid-cols-2 gap-4">
 
             <div className="rounded-2xl bg-white/15 p-5 backdrop-blur">

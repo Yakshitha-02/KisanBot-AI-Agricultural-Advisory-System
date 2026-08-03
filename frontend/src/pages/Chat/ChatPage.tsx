@@ -318,16 +318,13 @@ const handleSendMessage = async (
     id: Date.now() + "-user",
     role: "user",
     content,
-    timestamp: new Date().toLocaleTimeString(
-      [],
-      {
-        hour: "2-digit",
-        minute: "2-digit",
-      }
-    ),
+    timestamp: new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
   };
 
-
+  // Show user message immediately
   setMessages((prev) => [
     ...prev,
     userMessage,
@@ -336,13 +333,13 @@ const handleSendMessage = async (
   setIsLoading(true);
 
   try {
-    const response =
-      await chatService.ask(
-        sessionId,
-        content
-      );
+    const response = await chatService.ask(
+      sessionId,
+      content
+    );
 
     const botMessage: ChatMessageItem = {
+<<<<<<< HEAD
     id: String(response.data.message_id),
     role: "assistant",
     content: response.data.answer ?? "No response generated.",
@@ -351,12 +348,25 @@ const handleSendMessage = async (
         minute: "2-digit",
     }),
 };
+=======
+      id: Date.now() + "-bot",
+      role: "assistant",
+      content:
+        response.data.answer ??
+        "No response generated.",
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+>>>>>>> origin/reema-backend
 
     setMessages((prev) => [
       ...prev,
       botMessage,
     ]);
 
+    // Update sidebar preview
     setConversations((prev) =>
       prev.map((chat) =>
         chat.id === String(sessionId)
@@ -364,16 +374,38 @@ const handleSendMessage = async (
               ...chat,
               title:
                 content.length > 30
-                  ? content.substring(0, 30) +
-                    "..."
+                  ? content.substring(0, 30) + "..."
                   : content,
               preview: botMessage.content,
             }
           : chat
       )
     );
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
+
+    let errorMessage = "Something went wrong.";
+
+    if (err.response?.data?.detail) {
+      errorMessage = err.response.data.detail;
+    } else if (err.message) {
+      errorMessage = err.message;
+    }
+
+    const errorBotMessage: ChatMessageItem = {
+      id: Date.now() + "-error",
+      role: "assistant",
+      content: `❌ ${errorMessage}`,
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    setMessages((prev) => [
+      ...prev,
+      errorBotMessage,
+    ]);
   } finally {
     setIsLoading(false);
   }
@@ -439,11 +471,32 @@ const handleVoice = async () => {
             response.audio_file
         ).play();
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
+    }catch (err: any) {
+  console.error(err);
+
+  let errorMessage = "Something went wrong.";
+
+  if (err.response?.data?.detail) {
+    errorMessage = err.response.data.detail;
+  }
+
+  const botMessage: ChatMessageItem = {
+    id: Date.now() + "-error",
+    role: "assistant",
+    content: `❌ ${errorMessage}`,
+    timestamp: new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  };
+
+  setMessages((prev) => [
+    ...prev,
+    botMessage,
+  ]);
+} finally {
+  setIsLoading(false);
+}
   };
 
   recorder.start();

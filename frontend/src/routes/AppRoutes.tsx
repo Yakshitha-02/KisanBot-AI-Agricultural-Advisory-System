@@ -16,6 +16,7 @@ import RegisterPage from '../pages/Register/RegisterPage';
 import SettingsPage from '../pages/Settings/SettingsPage';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import CropDisease from '../pages/CropDisease/CropDisease';
+import HelpSupportPage from "../pages/farmer/HelpSupportPage";
 function AppRoutes() {
   return (
     <Routes>

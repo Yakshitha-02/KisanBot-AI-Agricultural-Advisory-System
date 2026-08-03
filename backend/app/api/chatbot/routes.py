@@ -1,4 +1,3 @@
-from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 from app.services.intent_classifier import classify_intent
@@ -10,6 +9,10 @@ from app.models.conversation_session import ConversationSession
 
 from app.schemas.chat import AskRequest, FeedbackRequest
 from app.schemas.session import SessionResponse
+from fastapi import APIRouter, Depends, HTTPException, Request
+from app.utils.sanitizer import sanitize_message
+from app.middleware.rate_limit import limiter
+import logging
 
 from app.schemas.chat_session import RenameSessionRequest
 from app.services.rag.chat import ask_rag
@@ -30,6 +33,7 @@ from app.models.unanswered_query import UnansweredQuery
 
 router = APIRouter()
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 
 # -----------------------------
@@ -56,130 +60,156 @@ def create_session(
 # Ask AI
 # -----------------------------
 @router.post("/ask")
+@limiter.limit("20/minute")
 def ask(
-    request: AskRequest,
+    request: Request,
+    payload: AskRequest,
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ):
-    token = verify_access_token(credentials.credentials)
+    try:
+        # -----------------------------
+        # Verify User
+        # -----------------------------
+        token = verify_access_token(credentials.credentials)
 
-    user = db.get(User, int(token["sub"]))
+        user = db.get(User, int(token["sub"]))
 
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        if user is None:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found",
+            )
 
-    session = (
-        db.query(ConversationSession)
-        .filter(
-            ConversationSession.id == request.session_id,
-            ConversationSession.user_id == user.id,
-        )
-        .first()
-    )
-
-    if session is None:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    response = process_question(request.question)
-
-    language = response["language"]
-    final_answer = response["answer"]
-
-    confidence = response.get("confidence")
-    score = response.get("score")
-
-    # Save low-confidence questions for admin review
-    if confidence is not None:
-
-     if confidence.lower() == "low":
-
-        unanswered = UnansweredQuery(
-            user_id=user.id,
-            question=request.question,
-            confidence=0.0,
+        # -----------------------------
+        # Verify Session
+        # -----------------------------
+        session = (
+            db.query(ConversationSession)
+            .filter(
+                ConversationSession.id == payload.session_id,
+                ConversationSession.user_id == user.id,
+            )
+            .first()
         )
 
-        db.add(unanswered)
-    # Save user message
-    user_message = Message(
-        session_id=session.id,
-        sender="user",
-        message=request.question,
-        language=language,
-    )
+        if session is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Session not found",
+            )
 
-    db.add(user_message)
+        # -----------------------------
+        # Sanitize Question
+        # -----------------------------
+        print("Original question:", repr(payload.question))
 
-    # Save assistant message
-    assistant_message = Message(
-        session_id=session.id,
-        sender="assistant",
-        message=final_answer,
-        language=language,
-    )
+        question = sanitize_message(payload.question)
 
-    db.add(assistant_message)
+        print("Sanitized question:", repr(question))
 
-    # Rename session after first question
-    if session.title == "New Chat":
-        session.title = request.question[:40]
+        logger.info(f"User {user.id} asked: {question}")
 
-    db.commit()
-    db.refresh(assistant_message)
+        # -----------------------------
+        # Load Conversation History
+        # -----------------------------
+        history = (
+            db.query(Message)
+            .filter(Message.session_id == session.id)
+            .order_by(Message.created_at.asc())
+            .all()
+        )
 
-    return {
-     "session_id": session.id,
-     "message_id": assistant_message.id,
-     "language": language,
-     "answer": final_answer,
-     "confidence": confidence,
-     "score": score,
-}
+        print("\n===== HISTORY =====")
+        for msg in history:
+            print(f"{msg.sender}: {msg.message}")
+        print("===================\n")
 
-@router.post("/intent")
-def detect_intent(request: AskRequest):
-    intent = classify_intent(request.question)
+        # -----------------------------
+        # Process Question
+        # -----------------------------
+        response = process_question(
+            question=question,
+            history=history,
+        )
 
-    return {
-        "question": request.question,
-        "intent": intent,
-    }
-@router.post("/ner")
-def detect_entities(request: AskRequest):
-    entities = extract_entities(request.question)
+        print("===== PROCESS QUESTION RESPONSE =====")
+        print(response)
+        print(type(response))
+        print("====================================")
+        
+        language = response["language"]
+        print("Language variable =", language)
+        final_answer = response["answer"]
+        confidence = response.get("confidence")
+        score = response.get("score")
 
-    return {
-        "question": request.question,
-        "entities": entities,
-    }
-# -----------------------------
-# List User Sessions
-# -----------------------------
-@router.get("/sessions")
-def get_sessions(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db),
-):
-    token = verify_access_token(credentials.credentials)
+        # Save low-confidence questions for admin review
+        if confidence and str(confidence).lower() == "low":
+            unanswered = UnansweredQuery(
+                user_id=user.id,
+                question=question,
+                confidence=0.0,
+            )
+            db.add(unanswered)
 
-    user = db.get(User, int(token["sub"]))
+        # -----------------------------
+        # Save User Message
+        # -----------------------------
+        print("About to save user message")
+        db.add(
+            Message(
+                session_id=session.id,
+                sender="user",
+                message=question,
+                language=language,
+            )
+        )
 
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        # -----------------------------
+        # Save Assistant Message
+        # -----------------------------
 
-    sessions = (
-        db.query(ConversationSession)
-        .filter(ConversationSession.user_id == user.id)
-        .order_by(ConversationSession.updated_at.desc())
-        .all()
-    )
+        assistant_message = Message(
+         session_id=session.id,
+         sender="assistant",
+         message=final_answer,
+         language=language,
+         )
 
-    return sessions
+        db.add(assistant_message)
 
+        # -----------------------------
+        # Update Session Title
+        # -----------------------------
+        if session.title == "New Chat":
+            session.title = question[:40]
 
-# -----------------------------
-# Get Messages of a Session
-# -----------------------------
+        db.commit()
+        db.refresh(assistant_message)
+
+        return {
+         "session_id": session.id,
+         "message_id": assistant_message.id,
+         "language": language,
+         "answer": final_answer,
+         "confidence": confidence,
+         "score": score,
+        }
+
+    except HTTPException:
+        db.rollback()
+        raise
+
+    except Exception as e:
+        db.rollback()
+        logger.exception(e)
+
+        raise HTTPException(
+            status_code=500,
+            detail="Internal Server Error",
+        )
+
 @router.get("/session/{session_id}")
 def get_messages(
     session_id: int,
@@ -223,7 +253,7 @@ def delete_session(
     if user is None:
         raise HTTPException(
             status_code=404,
-            detail="User not found"
+            detail="User not found",
         )
 
     deleted = delete_chat_session(
@@ -235,13 +265,12 @@ def delete_session(
     if not deleted:
         raise HTTPException(
             status_code=404,
-            detail="Session not found"
+            detail="Session not found",
         )
 
     return {
         "message": "Chat deleted successfully."
     }
-
 
 # -----------------------------
 # Rename Chat Session
@@ -260,7 +289,7 @@ def rename_session(
     if user is None:
         raise HTTPException(
             status_code=404,
-            detail="User not found"
+            detail="User not found",
         )
 
     session = rename_chat_session(
@@ -273,7 +302,7 @@ def rename_session(
     if session is None:
         raise HTTPException(
             status_code=404,
-            detail="Session not found"
+            detail="Session not found",
         )
 
     return session
