@@ -209,7 +209,29 @@ def ask(
             status_code=500,
             detail="Internal Server Error",
         )
+@router.get("/sessions", response_model=list[SessionResponse])
+def get_sessions(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db),
+):
+    token = verify_access_token(credentials.credentials)
 
+    user = db.get(User, int(token["sub"]))
+
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+
+    sessions = (
+        db.query(ConversationSession)
+        .filter(ConversationSession.user_id == user.id)
+        .order_by(ConversationSession.updated_at.desc())
+        .all()
+    )
+
+    return sessions
 @router.get("/session/{session_id}")
 def get_messages(
     session_id: int,

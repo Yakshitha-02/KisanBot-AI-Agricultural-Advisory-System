@@ -25,7 +25,8 @@ const DiseaseResult: React.FC<Props> = ({ result }) => {
         </h3>
 
         <p className="mt-2 text-3xl font-bold text-green-700">
-          {result.prediction.disease}
+          {result.prediction.translated_disease ??
+result.prediction.disease}
         </p>
 
         <ConfidenceBar confidence={result.prediction.confidence} />

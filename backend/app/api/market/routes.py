@@ -23,3 +23,30 @@ def market_price(
         )
 
     return result
+
+@router.get("/dashboard")
+def dashboard_prices():
+
+    commodities = [
+        "Tomato",
+        "Rice",
+        "Onion",
+        "Potato",
+        "Maize",
+    ]
+
+    state = "Andhra Pradesh"
+
+    prices = []
+
+    for commodity in commodities:
+
+        result = get_market_price(
+            commodity=commodity,
+            state=state,
+        )
+
+        if result:
+            prices.append(result)
+
+    return prices

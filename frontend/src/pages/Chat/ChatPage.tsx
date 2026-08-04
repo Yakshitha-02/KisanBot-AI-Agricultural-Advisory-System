@@ -338,28 +338,18 @@ const handleSendMessage = async (
       content
     );
 
-    const botMessage: ChatMessageItem = {
-<<<<<<< HEAD
-    id: String(response.data.message_id),
-    role: "assistant",
-    content: response.data.answer ?? "No response generated.",
-    timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-    }),
+       const botMessage: ChatMessageItem = {
+  id: String(
+    response.data.message_id ?? Date.now() + "-bot"
+  ),
+  role: "assistant",
+  content:
+    response.data.answer ?? "No response generated.",
+  timestamp: new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  }),
 };
-=======
-      id: Date.now() + "-bot",
-      role: "assistant",
-      content:
-        response.data.answer ??
-        "No response generated.",
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
->>>>>>> origin/reema-backend
 
     setMessages((prev) => [
       ...prev,

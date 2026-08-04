@@ -16,7 +16,9 @@ import RegisterPage from '../pages/Register/RegisterPage';
 import SettingsPage from '../pages/Settings/SettingsPage';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import CropDisease from '../pages/CropDisease/CropDisease';
-import HelpSupportPage from "../pages/farmer/HelpSupportPage";
+import WeatherPage from "../pages/Weather/WeatherPage";
+import MarketPage from "../pages/Market/MarketPage";
+import VoiceAssistant from "../pages/VoiceAssistant/VoiceAssistant";
 function AppRoutes() {
   return (
     <Routes>
@@ -38,7 +40,30 @@ function AppRoutes() {
         <Route path='/knowledge-base' element={<ProtectedRoute><KnowledgeBasePage /></ProtectedRoute>} />
         <Route path='/feedback' element={<ProtectedRoute><FeedbackPage /></ProtectedRoute>} />
         <Route path='/settings' element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-        <Route path='/crop-disease' element={<ProtectedRoute><CropDisease /></ProtectedRoute>}
+        <Route path='/crop-disease' element={<ProtectedRoute><CropDisease /></ProtectedRoute>}/>
+        <Route
+    path="/weather"
+    element={
+        <ProtectedRoute>
+            <WeatherPage />
+        </ProtectedRoute>
+    }
+/>
+<Route
+  path="/market"
+  element={
+    <ProtectedRoute>
+      <MarketPage />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/voice-assistant"
+  element={
+    <ProtectedRoute>
+      <VoiceAssistant />
+    </ProtectedRoute>
+  }
 />
       </Route>
 

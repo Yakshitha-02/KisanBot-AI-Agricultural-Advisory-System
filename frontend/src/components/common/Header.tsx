@@ -14,6 +14,7 @@ import {
   FiSettings,
   FiUser,
   FiChevronDown,
+  FiMic,
 } from "react-icons/fi";
 
 function Header() {
@@ -28,7 +29,9 @@ function Header() {
 
   const navItems = [
   {
-    to: user?.role === "admin" ? "/admin/dashboard" : "/farmer/dashboard",
+    to: user?.role === "admin"
+      ? "/admin/dashboard"
+      : "/farmer/dashboard",
     label: "Dashboard",
     icon: <FiHome />,
   },
@@ -36,6 +39,11 @@ function Header() {
     to: "/chat",
     label: "Chat",
     icon: <FiMessageSquare />,
+  },
+  {
+    to: "/voice-assistant",
+    label: "Voice Assistant",
+    icon: <FiMic />,
   },
   {
     to: "/crop-disease",

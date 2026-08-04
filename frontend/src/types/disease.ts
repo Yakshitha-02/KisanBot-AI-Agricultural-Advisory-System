@@ -1,23 +1,21 @@
 export interface Prediction {
-    disease: string;
-    confidence: number;
+  disease: string;
+  translated_disease?: string;
+  confidence: number;
 }
 
 export interface TopPrediction {
-    disease: string;
-    confidence: number;
-}
-
-export interface DiseaseResponse {
-    prediction: Prediction;
-    top_predictions: TopPrediction[];
-    warning?: string | null;
+  disease: string;
+  confidence: number;
 }
 
 export interface ApiResponse {
-    success?: boolean;
-    filename?: string;
-    prediction: Prediction;
-    top_predictions: TopPrediction[];
-    warning?: string | null;
+  filename: string;
+  language: string;
+
+  prediction: Prediction;
+
+  top_predictions: TopPrediction[];
+
+  warning?: string;
 }

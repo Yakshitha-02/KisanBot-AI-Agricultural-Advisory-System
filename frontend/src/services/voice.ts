@@ -8,12 +8,17 @@ export interface VoiceResponse {
 }
 
 export const voiceService = {
-  async sendVoice(audio: File): Promise<VoiceResponse> {
+  async sendVoice(
+    audio: File,
+    language: string = "English"
+  ): Promise<VoiceResponse> {
+
     const formData = new FormData();
 
     formData.append("audio", audio);
+    formData.append("language", language);
 
-    const response = await api.post(
+    const response = await api.post<VoiceResponse>(
       "/voice",
       formData,
       {

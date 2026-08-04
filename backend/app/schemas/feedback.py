@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from datetime import datetime
 from typing import Optional
 
@@ -42,12 +41,3 @@ class AdminFeedbackResponse(BaseModel):
 
     class Config:
         from_attributes = True
-=======
-from pydantic import BaseModel
-from typing import Optional
-
-class FeedbackRequest(BaseModel):
-    message_id: str
-    feedback: str   # "up" or "down"
-    comment: Optional[str] = None
->>>>>>> origin/reema-backend

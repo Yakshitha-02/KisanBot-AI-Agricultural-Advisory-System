@@ -2,7 +2,7 @@ import os
 import uuid
 import shutil
 
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, Form
 
 from app.services.speech.stt import speech_to_text
 from app.services.speech.tts import text_to_speech
@@ -22,39 +22,43 @@ LANGUAGE_MAP = {
 
 
 @router.post("/voice")
-async def voice_chat(audio: UploadFile = File(...)):
+async def voice_chat(
+    audio: UploadFile = File(...),
+    language: str = Form("English"),
+):
 
-    # Create folders
     os.makedirs("temp", exist_ok=True)
     os.makedirs("audio", exist_ok=True)
 
-    # Save uploaded audio
     input_path = f"temp/{uuid.uuid4()}.wav"
 
     with open(input_path, "wb") as buffer:
         shutil.copyfileobj(audio.file, buffer)
 
     try:
-        # Detect language using Whisper
-        whisper_result = detect_language(input_path)
 
-        language_code = whisper_result["language"]
+        # ----------------------------------------
+        # English → Auto Detect using Whisper
+        # ----------------------------------------
+        if language == "English":
 
-        if language_code in LANGUAGE_MAP:
+            whisper_result = detect_language(input_path)
 
-            language = LANGUAGE_MAP[language_code]
+            transcript = whisper_result["text"]
 
-            # Use Sarvam STT for supported languages
+            detected_language = "English"
+
+        # ----------------------------------------
+        # User Selected Language
+        # ----------------------------------------
+        else:
+
             transcript = speech_to_text(
                 input_path,
                 language,
             )
 
-        else:
-
-            # Unsupported language → use Whisper transcript
-            language = "English"
-            transcript = whisper_result["text"]
+            detected_language = language
 
     except Exception as e:
 
@@ -62,29 +66,35 @@ async def voice_chat(audio: UploadFile = File(...)):
 
         whisper_result = detect_language(input_path)
 
-        language = LANGUAGE_MAP.get(
+        transcript = whisper_result["text"]
+
+        detected_language = LANGUAGE_MAP.get(
             whisper_result["language"],
             "English",
         )
 
-        transcript = whisper_result["text"]
+    # AI Processing
+    response = process_question(
+        transcript,
+    )
 
-    # Process the question
-    response = process_question(transcript)
-
-    # Generate speech response
+    # Generate Speech
     output_filename = f"{uuid.uuid4()}.wav"
-    output_path = os.path.join("audio", output_filename)
+
+    output_path = os.path.join(
+        "audio",
+        output_filename,
+    )
 
     text_to_speech(
         response["answer"],
-        response["language"],
+        detected_language,
         output_file=output_path,
     )
 
     return {
         "transcript": transcript,
-        "language": response["language"],
+        "language": detected_language,
         "answer": response["answer"],
         "audio_file": f"audio/{output_filename}",
     }

@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { useAuth } from "../../hooks/useAuth";
+import { useEffect, useState } from "react";
+import { weatherService, WeatherResponse } from "../../services/weather";
 import {
   FiBookOpen,
   FiCloudRain,
@@ -10,11 +12,18 @@ import {
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import OverviewCards from "../../components/dashboard/OverviewCards";
+import { marketService, MarketPrice } from "../../services/market";
+import { chatService, Session } from "../../services/chat";
 
 function FarmerDashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [weather, setWeather] = useState<WeatherResponse | null>(null);
+  const [prices, setPrices] = useState<MarketPrice[]>([]);
+  const [loadingPrices, setLoadingPrices] = useState(true);
 
+const [loadingWeather, setLoadingWeather] = useState(true);
+const [sessions, setSessions] = useState<Session[]>([]);
 const getGreeting = () => {
   const hour = new Date().getHours();
 
@@ -34,6 +43,55 @@ const getSubtitle = () => {
 
   return "How can i help you with your farming needs today?";
 };
+useEffect(() => {
+  const loadDashboard = async () => {
+    try {
+      // Load market prices
+      const marketResponse = await marketService.getDashboardPrices();
+      setPrices(marketResponse.data);
+
+      // Load previous chats
+      const sessionResponse = await chatService.getSessions();
+      setSessions(sessionResponse.data.slice(0, 3));
+
+      setLoadingPrices(false);
+    } catch (err) {
+      console.error(err);
+      setLoadingPrices(false);
+    }
+
+    if (!navigator.geolocation) {
+      setLoadingWeather(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const response =
+            await weatherService.getCurrentByLocation(
+              position.coords.latitude,
+              position.coords.longitude
+            );
+
+          console.log("Weather Response:", response.data);
+
+          setWeather(response.data);
+        } catch (err) {
+          console.error("Weather Error:", err);
+        } finally {
+          setLoadingWeather(false);
+        }
+      },
+      (err) => {
+        console.error(err);
+        setLoadingWeather(false);
+      }
+    );
+  };
+
+  loadDashboard();
+}, []);
   return (
     <div className="space-y-8">
 
@@ -82,33 +140,37 @@ const getSubtitle = () => {
   </div>
           <div className="grid grid-cols-2 gap-4">
 
-            <div className="rounded-2xl bg-white/15 p-5 backdrop-blur">
+            <p className="text-sm text-emerald-100">
+  {loadingWeather
+    ? "Loading..."
+    : weather?.city ?? "Weather"}
+</p>
 
-              <FiSun className="mb-2 text-3xl" />
+<h2 className="text-3xl font-bold">
+  {weather
+    ? `${Math.round(weather.temperature)}°C`
+    : "--"}
+</h2>
 
-              <p className="text-sm text-emerald-100">
-                Weather
-              </p>
+<p className="mt-2 text-sm text-emerald-100">
+  {weather?.condition}
+</p>
 
-              <h2 className="text-3xl font-bold">
-                29°C
-              </h2>
+<p className="text-xs text-emerald-200">
+  💧 {weather?.humidity}%
+</p>
 
-            </div>
+            <p className="text-sm text-emerald-100">
+  {prices.length > 0
+    ? prices[0].commodity
+    : "Loading..."}
+</p>
 
-            <div className="rounded-2xl bg-white/15 p-5 backdrop-blur">
-
-              <FiTrendingUp className="mb-2 text-3xl" />
-
-              <p className="text-sm text-emerald-100">
-                Tomato Price
-              </p>
-
-              <h2 className="text-2xl font-bold">
-                ₹32/kg
-              </h2>
-
-            </div>
+<h2 className="text-2xl font-bold">
+  {prices.length > 0
+    ? `₹${prices[0].modal_price}`
+    : "--"}
+</h2>
 
           </div>
 
@@ -223,67 +285,72 @@ const getSubtitle = () => {
               💬 Continue Previous Chat
             </h2>
 
-            <button
-              onClick={() => navigate("/chat")}
-              className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700"
-            >
-              View All
-
-              <FiArrowRight />
-
-            </button>
 
           </div>
 
           <div className="space-y-4">
 
-            <div className="flex items-center justify-between rounded-2xl border p-5 transition hover:bg-slate-50">
+{sessions.length === 0 ? (
 
-              <div>
+<div className="rounded-2xl border p-6 text-center text-slate-500">
 
-                <h3 className="font-semibold">
-                  🍅 Tomato Leaf Disease
-                </h3>
+No previous conversations.
 
-                <p className="mt-1 text-sm text-slate-500">
-                  Yesterday • AI recommended Copper Oxychloride treatment.
-                </p>
+</div>
 
-              </div>
+) : (
 
-              <button
-                onClick={() => navigate("/chat")}
-                className="rounded-xl bg-emerald-600 px-5 py-2 text-white hover:bg-emerald-700"
-              >
-                Continue
-              </button>
+sessions.map((session) => (
 
-            </div>
+<div
+key={session.id}
+className="flex items-center justify-between rounded-2xl border p-5 transition hover:bg-slate-50"
+>
 
-            <div className="flex items-center justify-between rounded-2xl border p-5 transition hover:bg-slate-50">
+<div>
 
-              <div>
+<h3 className="font-semibold">
 
-                <h3 className="font-semibold">
-                  🌾 Rice Fertilizer Recommendation
-                </h3>
+💬 {session.title}
 
-                <p className="mt-1 text-sm text-slate-500">
-                  2 days ago • NPK dosage discussion.
-                </p>
+</h3>
 
-              </div>
+<p className="mt-1 text-sm text-slate-500">
 
-              <button
-                onClick={() => navigate("/chat")}
-                className="rounded-xl bg-emerald-600 px-5 py-2 text-white hover:bg-emerald-700"
-              >
-                Continue
-              </button>
+Created
 
-            </div>
+{" "}
 
-          </div>
+{new Date(
+session.created_at ?? ""
+).toLocaleDateString()}
+
+</p>
+
+</div>
+
+<button
+
+onClick={() =>
+navigate(
+`/chat?session=${session.id}`
+)
+}
+
+className="rounded-xl bg-emerald-600 px-5 py-2 text-white hover:bg-emerald-700"
+>
+
+Continue
+
+</button>
+
+</div>
+
+))
+
+)}
+
+</div>
 
         </motion.div>
 
@@ -359,52 +426,36 @@ const getSubtitle = () => {
 
             </h2>
 
-            <button
-              onClick={() => navigate("/market")}
-              className="text-emerald-600 hover:text-emerald-700"
-            >
-              View All →
-            </button>
-
           </div>
 
           <div className="space-y-5">
 
-            <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
+            <div className="space-y-4">
 
-              <span>🍅 Tomato</span>
+  {prices.map((item) => (
 
-              <span className="font-semibold text-green-600">
+    <div
+      key={item.commodity}
+      className="flex items-center justify-between rounded-xl bg-slate-50 p-4"
+    >
 
-                ₹32/kg ↑
+      <span>
+        🌾 {item.commodity}
+      </span>
 
-              </span>
+      <span className="font-semibold text-green-600">
+        ₹{item.modal_price}
+      </span>
 
-            </div>
+    </div>
 
-            <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
+  ))}
 
-              <span>🌾 Rice</span>
+</div>
 
-              <span className="font-semibold">
+           
 
-                ₹24/kg
-
-              </span>
-
-            </div>
-
-            <div className="flex items-center justify-between rounded-xl bg-slate-50 p-4">
-
-              <span>🌽 Maize</span>
-
-              <span className="font-semibold text-red-600">
-
-                ₹18/kg ↓
-
-              </span>
-
-            </div>
+            
 
           </div>
 
