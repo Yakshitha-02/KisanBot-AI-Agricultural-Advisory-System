@@ -22,21 +22,26 @@ def text_to_speech(
     language: str = "Telugu",
     output_file: str = "output.wav",
 ):
+    try:
+        response = client.text_to_speech.convert(
 
-    response = client.text_to_speech.convert(
+            text=text,
 
-        text=text,
+            target_language_code=LANGUAGE_CODES.get(language, "en-IN"),
 
-        target_language_code=LANGUAGE_CODES[language],
+            speaker="priya",
 
-        speaker="priya",
+            model="bulbul:v3",
 
-        model="bulbul:v3",
+            output_audio_codec="wav",
+        )
 
-        output_audio_codec="wav",
-    )
+        with open(output_file, "wb") as f:
+            f.write(base64.b64decode(response.audios[0]))
 
-    with open(output_file, "wb") as f:
-     f.write(base64.b64decode(response.audios[0]))
+        return output_file
 
-    return output_file
+    except Exception as e:
+        # Log the error and return None so callers can continue without TTS.
+        print("TTS Error:", e)
+        return None
