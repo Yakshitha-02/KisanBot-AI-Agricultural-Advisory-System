@@ -1,11 +1,13 @@
 import { FormEvent, useState } from 'react';
 import { FiSend, FiMic } from "react-icons/fi";
+
 interface ChatInputProps {
   onSend: (message: string) => void;
   onVoice: () => void;
   onStopRecording: () => void;
   isLoading: boolean;
   isRecording: boolean;
+  online: boolean;
 }
 
 function ChatInput({
@@ -14,6 +16,7 @@ function ChatInput({
   onStopRecording,
   isLoading,
   isRecording,
+  online,
 }: ChatInputProps)
  {
   const [input, setInput] = useState('');
@@ -36,12 +39,14 @@ function ChatInput({
         value={input}
         onChange={(event) => setInput(event.target.value)}
         placeholder={
-isRecording
-? "🎙 Listening..."
-: "Ask about crops, weather, soil, or market prices..."
+  !online
+    ? "📡 Offline — reconnect to ask new questions"
+    : isRecording
+      ? "🎙 Listening..."
+      : "Ask about crops, weather, soil, or market prices..."
 }
         className='flex-1 border-0 bg-transparent px-2 py-2 text-sm outline-none placeholder:text-slate-400'
-        disabled={isLoading || isRecording}
+        disabled={!online || isLoading || isRecording}
       />
       {isRecording ? (
 
@@ -62,7 +67,7 @@ Stop Listening
 <button
 type="button"
 onClick={onVoice}
-disabled={isLoading}
+disabled={!online || isLoading}
 className="rounded-xl border border-emerald-200 p-2 text-emerald-600 hover:bg-emerald-50"
 >
 
@@ -73,7 +78,7 @@ className="rounded-xl border border-emerald-200 p-2 text-emerald-600 hover:bg-em
 )}
       <button
         type='submit'
-        disabled={isLoading || !input.trim()}
+        disabled={!online || isLoading || !input.trim()}
         className='flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300'
       >
         <FiSend size={16} />

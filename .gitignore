@@ -50,8 +50,6 @@ htmlcov/
 !.env.example
 
 # SQLite Database
-*.db
-*.sqlite3
 
 # Logs
 *.log

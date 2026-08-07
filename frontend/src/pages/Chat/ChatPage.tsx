@@ -7,6 +7,7 @@ import ConversationSidebar from "../../components/chatbot/ConversationSidebar";
 
 import { voiceService } from "../../services/voice";
 import { chatService } from "../../services/chat";
+import useOnlineStatus from "../../hooks/useOnlineStatus";
 
 const CONVERSATION_STORAGE_KEY = "kisanbot-chat-conversations";
 
@@ -78,19 +79,46 @@ function ChatPage() {
     useState<string | null>(stored.activeConversationId);
 
   const [messages, setMessages] =
-    useState<ChatMessageItem[]>([]);
+  useState<ChatMessageItem[]>([]);
 
-  const [sessionId, setSessionId] =
-    useState<number | null>(null);
+const [sessionId, setSessionId] =
+  useState<number | null>(null);
 
-  const [isLoading, setIsLoading] =
-    useState(false);
+const [isLoading, setIsLoading] =
+  useState(false);
 
-  const [isRecording, setIsRecording] =
-    useState(false);
+const [isRecording, setIsRecording] =
+  useState(false);
 
-  const [mediaRecorder, setMediaRecorder] =
-    useState<MediaRecorder | null>(null);
+const [mediaRecorder, setMediaRecorder] =
+  useState<MediaRecorder | null>(null);
+const online = useOnlineStatus();
+
+/* -------------------------------
+   Restore last conversation
+--------------------------------*/
+
+useEffect(() => {
+  const saved = localStorage.getItem(
+    "kisanbot-last-chat"
+  );
+
+  if (saved) {
+    setMessages(JSON.parse(saved));
+  }
+}, []);
+
+/* -------------------------------
+   Save conversation whenever
+   messages change
+--------------------------------*/
+
+useEffect(() => {
+  localStorage.setItem(
+    "kisanbot-last-chat",
+    JSON.stringify(messages)
+  );
+}, [messages]);
 
   const activeConversation = useMemo(
     () =>
@@ -306,6 +334,7 @@ const handleDeleteConversation = async (
   }
 };
 
+
 /*
  * Send message
  */
@@ -313,6 +342,39 @@ const handleSendMessage = async (
   content: string
 ) => {
   if (!sessionId) return;
+
+  // Offline Mode
+  if (!navigator.onLine) {
+    const userMessage: ChatMessageItem = {
+      id: Date.now() + "-user",
+      role: "user",
+      content,
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    const offlineMessage: ChatMessageItem = {
+      id: Date.now() + "-offline",
+      role: "assistant",
+      content:
+        "📡 Offline — reconnect to ask new questions.",
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    setMessages((prev) => [
+      ...prev,
+      userMessage,
+      offlineMessage,
+    ]);
+
+    return;
+  };
+
 
   const userMessage: ChatMessageItem = {
     id: Date.now() + "-user",
@@ -557,6 +619,7 @@ return (
   onStopRecording={() => mediaRecorder?.stop()}
   isLoading={isLoading}
   isRecording={isRecording}
+  online={online}
 />
 
       </div>
