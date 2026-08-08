@@ -7,7 +7,8 @@ processor = AutoImageProcessor.from_pretrained("microsoft/resnet-50")
 
 # Load disease classification model
 model = AutoModelForImageClassification.from_pretrained(
-    "SanketJadhav/PlantDiseaseClassifier-Resnet50"
+    "SanketJadhav/PlantDiseaseClassifier-Resnet50",
+    use_safetensors=False
 )
 
 
