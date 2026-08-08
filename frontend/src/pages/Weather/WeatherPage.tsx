@@ -22,24 +22,47 @@ export default function WeatherPage() {
   const [weather, setWeather] = useState<Weather | null>(null);
   const [forecast, setForecast] = useState<Forecast[]>([]);
   const [city, setCity] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const loadCurrentLocation = () => {
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const { latitude, longitude } = position.coords;
+    if (!navigator.geolocation) {
+      setError("Your browser does not support location access.");
+      return;
+    }
 
-      const current = await weatherService.getCurrentByLocation(
-        latitude,
-        longitude
-      );
+    setLoading(true);
+    setError("");
 
-      const forecastRes = await weatherService.getForecast(
-        latitude,
-        longitude
-      );
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
 
-      setWeather(current.data);
-      setForecast(forecastRes.data);
-    });
+          const current = await weatherService.getCurrentByLocation(
+            latitude,
+            longitude
+          );
+
+          const forecastRes = await weatherService.getForecast(
+            latitude,
+            longitude
+          );
+
+          setWeather(current.data);
+          setForecast(forecastRes.data);
+        } catch (err) {
+          console.error(err);
+          setError("Unable to load weather right now.");
+        } finally {
+          setLoading(false);
+        }
+      },
+      () => {
+        setError("Unable to access your location.");
+        setLoading(false);
+      }
+    );
   };
 
   useEffect(() => {
@@ -49,19 +72,29 @@ export default function WeatherPage() {
   const searchCity = async () => {
     if (!city) return;
 
-    const current = await weatherService.getCurrent(city);
+    setLoading(true);
+    setError("");
 
-    setWeather(current.data);
+    try {
+      const current = await weatherService.getCurrent(city);
 
-    // forecast using city
-    const geo = await weatherService.getCoordinates(city);
+      setWeather(current.data);
 
-    const forecastRes = await weatherService.getForecast(
-      geo.data.lat,
-      geo.data.lon
-    );
+      // forecast using city
+      const geo = await weatherService.getCoordinates(city);
 
-    setForecast(forecastRes.data);
+      const forecastRes = await weatherService.getForecast(
+        geo.data.lat,
+        geo.data.lon
+      );
+
+      setForecast(forecastRes.data);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to load weather right now.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const dailyForecast = forecast.filter((_, index) => index % 8 === 0);
@@ -99,6 +132,18 @@ export default function WeatherPage() {
         </button>
 
       </div>
+
+      {error && (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="mb-6 rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-600">
+          Loading weather data...
+        </div>
+      )}
 
       {/* Current Weather */}
 

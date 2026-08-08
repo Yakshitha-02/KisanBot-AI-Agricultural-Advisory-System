@@ -3,6 +3,7 @@ import requests
 from app.core.config import settings
 
 BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
+GEOCODE_URL = "https://api.openweathermap.org/geo/1.0/direct"
 
 
 # -----------------------------------------------------------------
@@ -66,6 +67,38 @@ def get_current_weather_by_coords(lat: float, lon: float):
         "description": data["weather"][0]["description"],
         "wind_speed": data["wind"]["speed"],
         "icon": data["weather"][0]["icon"],
+    }
+
+
+def geocode_city(city: str):
+
+    if not settings.openweather_api_key:
+        return None
+
+    params = {
+        "q": city,
+        "limit": 1,
+        "appid": settings.openweather_api_key,
+    }
+
+    response = requests.get(GEOCODE_URL, params=params)
+
+    if response.status_code != 200:
+        return None
+
+    data = response.json()
+
+    if not data:
+        return None
+
+    first = data[0]
+
+    return {
+        "lat": first["lat"],
+        "lon": first["lon"],
+        "name": first.get("name", city),
+        "country": first.get("country"),
+        "state": first.get("state"),
     }
 
 def get_5_day_forecast(lat: float, lon: float):

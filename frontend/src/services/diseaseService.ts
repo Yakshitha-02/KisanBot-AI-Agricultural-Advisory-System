@@ -1,7 +1,8 @@
 import axios from "axios";
 import { ApiResponse } from "../types/disease";
+import { buildApiUrl } from "./api";
 
-const API_URL = "http://127.0.0.1:8000/api/disease/predict";
+const API_URL = buildApiUrl("/disease/predict");
 export const predictDisease = async (
   file: File,
   language: string

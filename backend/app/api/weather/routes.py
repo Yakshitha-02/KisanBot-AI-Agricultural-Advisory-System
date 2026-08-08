@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.services.weather.weather_service import (
     get_current_weather,
     get_current_weather_by_coords,
+    geocode_city,
     get_5_day_forecast,
 )
 
@@ -55,6 +56,20 @@ def forecast(lat: float, lon: float):
         raise HTTPException(
             status_code=404,
             detail="Unable to fetch forecast."
+        )
+
+    return data
+
+
+@router.get("/geocode")
+def geocode(city: str):
+
+    data = geocode_city(city)
+
+    if data is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Unable to geocode city.",
         )
 
     return data

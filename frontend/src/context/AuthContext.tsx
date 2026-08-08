@@ -1,13 +1,12 @@
+import axios from "axios";
 import { createContext, ReactNode, useEffect, useState } from "react";
-import { authService } from "../services/auth";
-
-interface AuthUser {
-  id: number;
-  email: string;
-  role: "farmer" | "admin";
-  full_name: string;
-  is_active?: boolean;
-}
+import {
+  authService,
+  clearStoredAuthUser,
+  getStoredAuthUser,
+  setStoredAuthUser,
+  type AuthUser,
+} from "../services/auth";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -24,24 +23,36 @@ export const AuthContext = createContext<AuthContextValue>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(() => getStoredAuthUser());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const restoreSession = async () => {
       const token = localStorage.getItem("kisanbot_token");
+      const cachedUser = getStoredAuthUser();
 
       if (!token) {
+        setUser(cachedUser);
         setLoading(false);
         return;
+      }
+
+      if (cachedUser) {
+        setUser(cachedUser);
       }
 
       try {
         const currentUser = await authService.getCurrentUser();
         setUser(currentUser);
+        setStoredAuthUser(currentUser);
       } catch (err) {
-        localStorage.removeItem("kisanbot_token");
-        setUser(null);
+        if (axios.isAxiosError(err) && [401, 403].includes(err.response?.status ?? 0)) {
+          localStorage.removeItem("kisanbot_token");
+          clearStoredAuthUser();
+          setUser(null);
+        } else if (!cachedUser) {
+          setUser(null);
+        }
       }
 
       setLoading(false);
@@ -58,11 +69,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authData.access_token
     );
 
-    setUser(authData.user);
+    if (authData.user) {
+      setStoredAuthUser(authData.user);
+      setUser(authData.user);
+    }
   };
 
   const logout = () => {
     localStorage.removeItem("kisanbot_token");
+    clearStoredAuthUser();
     setUser(null);
   };
 

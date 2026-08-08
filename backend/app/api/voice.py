@@ -2,12 +2,23 @@ import os
 import uuid
 import shutil
 
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 
-from app.services.speech.stt import speech_to_text
-from app.services.speech.tts import text_to_speech
-from app.services.speech.whisper_stt import detect_language
 from app.services.chatbot import process_question
+
+# Import speech dependencies lazily so the app can still start on systems
+# where native audio/model libraries (like whisper) are not available.
+try:
+    from app.services.speech.stt import speech_to_text
+    from app.services.speech.tts import text_to_speech
+    from app.services.speech.whisper_stt import detect_language
+    VOICE_AVAILABLE = True
+except Exception:
+    VOICE_AVAILABLE = False
+
+# If imports succeeded but ffmpeg isn't on PATH, mark voice as unavailable
+if VOICE_AVAILABLE and shutil.which("ffmpeg") is None:
+    VOICE_AVAILABLE = False
 
 router = APIRouter()
 
@@ -27,6 +38,18 @@ async def voice_chat(
     language: str = Form("English"),
 ):
 
+    if not VOICE_AVAILABLE:
+        return {
+            "transcript": "Voice assistant is unavailable on this server.",
+            "language": language,
+            "answer": (
+                "Voice features are not enabled in this environment. "
+                "Install ffmpeg and the optional speech dependencies to turn them on."
+            ),
+            "audio_file": "",
+            "supported": False,
+        }
+
     os.makedirs("temp", exist_ok=True)
     os.makedirs("audio", exist_ok=True)
 
@@ -36,7 +59,6 @@ async def voice_chat(
         shutil.copyfileobj(audio.file, buffer)
 
     try:
-
         # ----------------------------------------
         # English → Auto Detect using Whisper
         # ----------------------------------------
@@ -64,14 +86,31 @@ async def voice_chat(
 
         print("Speech Processing Error:", e)
 
-        whisper_result = detect_language(input_path)
+        # If ffmpeg is missing or the error indicates a missing external tool,
+        # return a clear 503 so the client knows to install ffmpeg.
+        msg = str(e).lower()
+        if "ffmpeg" in msg or isinstance(e, FileNotFoundError):
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "ffmpeg not found or not executable. Install ffmpeg and ensure "
+                    "it's available on the PATH for the process running the server."
+                ),
+            )
 
-        transcript = whisper_result["text"]
+        # Fallback: try whisper detect as a last resort, but handle failures.
+        try:
+            whisper_result = detect_language(input_path)
 
-        detected_language = LANGUAGE_MAP.get(
-            whisper_result["language"],
-            "English",
-        )
+            transcript = whisper_result["text"]
+
+            detected_language = LANGUAGE_MAP.get(
+                whisper_result["language"],
+                "English",
+            )
+        except Exception as e2:
+            print("Fallback whisper failed:", e2)
+            raise HTTPException(status_code=500, detail=f"Speech processing failed: {e2}")
 
     # AI Processing
     response = process_question(

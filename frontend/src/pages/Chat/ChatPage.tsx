@@ -7,6 +7,7 @@ import ConversationSidebar from "../../components/chatbot/ConversationSidebar";
 
 import { voiceService } from "../../services/voice";
 import { chatService } from "../../services/chat";
+import { buildBackendUrl } from "../../services/api";
 
 const CONVERSATION_STORAGE_KEY = "kisanbot-chat-conversations";
 
@@ -456,10 +457,7 @@ const handleVoice = async () => {
       ]);
 
       if (response.audio_file) {
-        new Audio(
-          "http://127.0.0.1:8000/" +
-            response.audio_file
-        ).play();
+        new Audio(buildBackendUrl(response.audio_file)).play();
       }
     }catch (err: any) {
   console.error(err);

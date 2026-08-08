@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Mic, Square, Volume2, Languages } from "lucide-react";
 import { voiceService } from "../../services/voice";
+import { buildBackendUrl } from "../../services/api";
 
 const VoiceAssistant = () => {
   const [recording, setRecording] = useState(false);
@@ -65,6 +66,14 @@ const VoiceAssistant = () => {
       );
 
       try {
+        if (!navigator.onLine) {
+          setTranscript("Offline recording saved locally.");
+          setAnswer(
+            "Voice assistant needs a connection to generate an answer."
+          );
+          return;
+        }
+
         const response =
           await voiceService.sendVoice(
             file,
@@ -75,8 +84,7 @@ const VoiceAssistant = () => {
 
         setAnswer(response.answer);
 
-        const url =
-          `http://127.0.0.1:8000/${response.audio_file}`;
+        const url = buildBackendUrl(response.audio_file);
 
         setAudioUrl(url);
 
